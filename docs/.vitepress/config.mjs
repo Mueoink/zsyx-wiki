@@ -31,40 +31,122 @@ export default defineConfig({
           collapsed: false,
           items: [{ text: "介绍", link: "/wiki/start" }],
         },
+
+        // 总览
         {
-          text: "世界观",
+          text: "总览",
           collapsed: false,
           items: [
-            { text: "世界观概览", link: "/wiki/setting/world_setting.md" },
+            { text: "世界观", link: "/wiki/setting/world_setting.md" },
+            { text: "基础规则", link: "/wiki/setting/rule.md" },
             {
-              text: "诸神信仰",
-              collapsed: true,
-              items: [{ text: "神明概览", link: "/wiki/setting/gods/main.md" }],
-            },
-            {
-              text: "地理划分",
+              text: "地理档案",
               collapsed: true,
               items: [
-                { text: "地理概览", link: "/wiki/setting/geography/main.md" },
+                {
+                  text: "希望之州",
+                  link: "/wiki/setting/geography/state_of_hope.md",
+                },
               ],
             },
             {
-              text: "种族划分",
+              text: "种族档案",
               collapsed: true,
-              items: [{ text: "种族概览", link: "/wiki/setting/race/main.md" }],
+              items: [
+                {
+                  text: "蕈足人",
+                  link: "/wiki/setting/race/mushroom-footed.md",
+                },
+              ],
             },
           ],
         },
+
+        // 诸神信仰
         {
-          text: "角色 天赋及道具",
+          text: "诸神信仰",
           collapsed: false,
           items: [
-            { text: "主要角色信息", link: "/wiki/characters/characters.md" },
-            { text: "天赋信息", link: "/wiki/characters/skills.md" },
-            { text: "道具信息", link: "/wiki/characters/props.md" },
-            { text: "其他角色信息", link: "/wiki/characters/another.md" },
+            { text: "概览", link: "/wiki/gods/main.md" },
+            {
+              text: "真神名录",
+              collapsed: true,
+              items: [
+                {
+                  text: "生命",
+                  collapsed: true,
+                  items: [
+                    {
+                      text: "死亡",
+                      link: "/wiki/gods/main/life/dead.md",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              text: "从神档案",
+              collapsed: true,
+              items: [
+                {
+                  text: "生命",
+                  collapsed: true,
+                  items: [
+                    {
+                      text: "繁荣",
+                      link: "/wiki/gods/from_the_gods/life/vibrant.md",
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              text: "野神档案",
+              collapsed: true,
+              items: [{}],
+            },
           ],
         },
+
+        // 角色档案
+        {
+          text: "角色档案",
+          collapsed: false,
+          items: [
+            {
+              text: "主要角色信息",
+              collapsed: true,
+              items: [
+                {
+                  text: "程实",
+                  link: "/wiki/characters/main/cheng_shi.md",
+                },
+                {
+                  text: "重要角色",
+                  link: "/wiki/characters/main/important.md",
+                },
+                {
+                  text: "神选名单",
+                  link: "/wiki/characters/main/chosen.md",
+                },
+              ],
+            },
+            { text: "次要角色信息", link: "/wiki/characters/minor.md" },
+          ],
+        },
+
+        // 道具天赋档案
+        {
+          text: "道具天赋档案",
+          collapsed: false,
+          items: [
+            { text: "道具档案", link: "/wiki/assets/props.md" },
+            { text: "未知分类", link: "/wiki/assets/unclassified.md" },
+            { text: "天赋档案", link: "/wiki/assets/skills.md" },
+          ],
+        },
+
+        // 势力组织
         {
           text: "势力组织",
           collapsed: false,
@@ -164,6 +246,8 @@ export default defineConfig({
             },
           ],
         },
+
+        // 情节与事件
         {
           text: "情节与事件",
           collapsed: false,
@@ -191,6 +275,8 @@ export default defineConfig({
             },
           ],
         },
+
+        // 同人收录
         {
           text: "同人收录",
           collapsed: true,
@@ -206,6 +292,7 @@ export default defineConfig({
           ],
         },
       ],
+
       "/contribution/": [
         {
           text: "贡献",
@@ -226,15 +313,15 @@ export default defineConfig({
     socialLinks: [
       { icon: "github", link: "https://github.com/Mueoink/zsyx-wiki/" },
     ],
-      markdown: {
-    container: {
-      tipLabel: '提示',
-      warningLabel: '警告',
-      dangerLabel: '危险',
-      infoLabel: '信息',
-      detailsLabel: '详细信息'
-    }
-  },
+    markdown: {
+      container: {
+        tipLabel: "提示",
+        warningLabel: "警告",
+        dangerLabel: "危险",
+        infoLabel: "信息",
+        detailsLabel: "详细信息",
+      },
+    },
     footer: {
       message: "Released under the CC BY-NC-ND 4.0.",
       copyright: "Copyright © 2024-present Mueo",

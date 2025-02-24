@@ -90,6 +90,7 @@ export default {
     justify-content: center;
     align-items: center;
     background-color: transparent;
+    
 }
 
 .member-avatar img {
@@ -97,6 +98,7 @@ export default {
     height: 100%;
     object-fit: cover;
     display: block;
+    
 }
 
 .avatar-placeholder {

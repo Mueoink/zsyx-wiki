@@ -1,5 +1,26 @@
 # 传火者
+::: details 贡献名单
 
+**此部分由以下人员贡献:**
+<MemberBlock :members="teamMembers" />
+
+<script setup>
+
+
+const teamMembers = [
+  {
+    avatar: 'https://q1.qlogo.cn/g?b=qq&nk=1660729567&s=640',
+    text: '辽神',
+  },
+    {
+    avatar: 'https://q1.qlogo.cn/g?b=qq&nk=410757752&s=640',
+    text: 'Mueo',
+  },
+
+];
+</script>
+
+:::
 
 ## 基本信息
 **势力类型：** 隐秘组织   
