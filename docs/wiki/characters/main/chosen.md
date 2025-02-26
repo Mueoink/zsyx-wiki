@@ -21,6 +21,10 @@ const teamMembers = [
     avatar: 'https://q1.qlogo.cn/g?b=qq&nk=1261815798&s=640',
     text: '几个孤独',
   },
+  {
+    avatar: 'https://q1.qlogo.cn/g?b=qq&nk=2494497322&s=640',
+    text: '粟尘',
+  },
 ];
 </script>
 
