@@ -122,12 +122,12 @@ export default defineConfig({
                   link: "/wiki/characters/main/cheng_shi.md",
                 },
                 {
-                  text: "重要角色",
-                  link: "/wiki/characters/main/important.md",
-                },
-                {
                   text: "神选名单",
                   link: "/wiki/characters/main/chosen.md",
+                },
+                {
+                  text: "重要角色",
+                  link: "/wiki/characters/main/important.md",
                 },
               ],
             },
@@ -298,8 +298,10 @@ export default defineConfig({
           text: "贡献",
           collapsed: false,
           items: [
+            { text: "贡献审核指南", link: "/contribution/guide" },
             { text: "如何贡献", link: "/contribution/contribute" },
             { text: "编写要求", link: "/contribution/compile" },
+            { text: "贡献审核指南", link: "/contribution/guide" },
             { text: "贡献团队", link: "/contribution/team" },
           ],
         },
