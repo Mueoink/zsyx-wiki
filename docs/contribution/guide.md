@@ -46,7 +46,7 @@ const teamMembers = [
 ```  
 
 2. **贡献内容**：  
-- 格式遵从 [编写指南](/docs/contribution/compile.md) ,但需包含：  
+- 格式遵从 [编写指南](/contribution/compile.md) ,但需包含：  
    - **设定来源**（书中原文引用，标注章节）。  
    - **逻辑自洽性说明**（不与已知设定冲突）。  
 - 示例：  
