@@ -49,4 +49,9 @@ export const teamMembers = [
     name: "粟尘",
     title: "内容贡献",
   },
+  {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=3079265589&s=640",
+    name: "1",
+    title: "审核修订",
+  },
 ];
