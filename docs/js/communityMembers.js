@@ -6,12 +6,22 @@ export const communityMembers = [
   },
   {
     avatar: "https://q1.qlogo.cn/g?b=qq&nk=1494598471&s=640",
-    name: "慧星",
+    name: "零玲",
     title: "同人作者",
   },
   {
     avatar: "https://q1.qlogo.cn/g?b=qq&nk=2393173704&s=640",
-    name: "悔云",
+    name: "慧星和悔云",
+    title: "同人作者",
+  },
+  {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=404125372&s=640",
+    name: "25小时持续睡眠",
+    title: "同人作者",
+  },
+  {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=3148770680&s=640",
+    name: "风和水",
     title: "同人作者",
   },
 ];

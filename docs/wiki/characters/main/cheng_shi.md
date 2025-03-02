@@ -185,8 +185,15 @@ const teamMembers = [
 感谢同人作者的支持，排序不分先后  
 
 by:慧星:
-![by:慧星](/chengshi_2.png)
+![by:慧星和悔云](/chengshi/chengshi_1.png)
 
 by:悔云:
-![by:悔云](/chengshi_1.png)
+![by:零玲](/chengshi/chengshi_2.png)
+
+by:25小时持续睡眠
+![by:25小时持续睡眠](/chengshi/chengshi_3.png)
+
+by:风和水
+![by:风和水](/chengshi/chengshi_4.png)
+
 
