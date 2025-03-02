@@ -20,6 +20,14 @@ const teamMembers = [
     text: '琥珀',
   },
 ];
+
+const galleryImages = [
+  { src: '/chengshi/chengshi_1.png', text: 'by:慧星和悔云' },
+  { src: '/chengshi/chengshi_2.png', text: 'by:零玲' },
+  { src: '/chengshi/chengshi_3.png', text: 'by:25小时持续睡眠' },
+  { src: '/chengshi/chengshi_4.png', text: 'by:风和水' },
+  { src: '/chengshi/chengshi_5.png', text: 'by:我从不信命' },
+];
 </script>
 
 :::
@@ -82,8 +90,6 @@ const teamMembers = [
 **时间自有来途(S)：** 时间信仰天赋，主动，每当你发动命运亦有歧途后，在命运彻底走向崩坏前，你可以通过回溯时光，回到歧途产生之前，以此效果产生的回溯将让天赋命运亦有歧途进入长时间冷却。
 
 **难以捉摸的筹码(S)：** 时间信仰天赋，主动，每当你发动永不遗落的赌具时，骰子的可交换位置将不仅限于其当下所在位置，还将包括其在过去和未来中的轨迹，时间节点的长短将依据精神力决定。
-
-**混乱扮演法(SS)：** 混乱信仰天赋，主动，当你在扮演某个目标时，无论他人是否对你扮演的身份表示认可，你都可以向他人展现出你想要对其展现的形象、气质和声音，以达到以假乱真的效果。
 
 ### 弃誓祖咒
 **众生相(S)：** 欺诈信仰天赋，被动，特殊试炼奖励将替换为特殊道具【众生假面】，且此天赋不可被其他天赋替换。
@@ -164,10 +170,10 @@ const teamMembers = [
 红霖 — 合作  
 李景明 — 拉拢  
 张祭祖 — 合作  
-安宛瑜 — 合作  
+安铭瑜 — 合作  
 胡璇 — 被馋身子  
 甄欣 — 合作  
-甄意 — 绯闻男友  
+甄奕 — 绯闻男友  
 
 > PS：巅峰玩家多多少少都跟程实沾点关系
 
@@ -184,16 +190,4 @@ const teamMembers = [
 ## 同人画作
 感谢同人作者的支持，排序不分先后  
 
-by:慧星:
-![by:慧星和悔云](/chengshi/chengshi_1.png)
-
-by:悔云:
-![by:零玲](/chengshi/chengshi_2.png)
-
-by:25小时持续睡眠
-![by:25小时持续睡眠](/chengshi/chengshi_3.png)
-
-by:风和水
-![by:风和水](/chengshi/chengshi_4.png)
-
-
+<Gallery :images= "galleryImages" />
