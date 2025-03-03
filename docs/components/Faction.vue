@@ -152,7 +152,7 @@ export default {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    padding: 40px;
+    padding: 20px;
 }
 
 .quiz-container {
@@ -167,6 +167,7 @@ export default {
     border-radius: 24px;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
     padding: 60px;
+    /* 卡片内部的间距（四周：上、右、下、左） */
     margin-bottom: 30px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     position: relative;
@@ -211,7 +212,7 @@ export default {
 
 .question-number,
 .result-title {
-    font-size: 18px;
+    font-size: 20px;
     /* 标题字体大小 */
     color: #777;
     /* 标题字体颜色 */
@@ -222,7 +223,7 @@ export default {
 
 .question-text,
 .result-faction-title {
-    font-size: px;
+    font-size: 20px;
     /* 大标题字体大小 */
     font-weight: 700;
     color: #333;
@@ -232,7 +233,7 @@ export default {
 }
 
 .result-faction-title {
-    font-size: 36px;
+    font-size: 25px;
     /* 结果主势力标题字体大小 */
     margin-bottom: 15px;
 }
@@ -242,7 +243,7 @@ export default {
     /* 次要结果字体大小 */
     color: #555;
     /* 次要结果字体颜色 */
-    margin-bottom: 25px;
+    margin-bottom: 20px;
 }
 
 .options-grid {
