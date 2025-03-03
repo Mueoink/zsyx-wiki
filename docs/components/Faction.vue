@@ -261,14 +261,14 @@ export default {
 .option-button,
 .restart-button,
 .previous-button {
-    padding: 20px 40px;
+    padding: 20px 15px;
     border: none;
     border-radius: 14px;
     background-color: #fff;
     /* 按钮背景色 */
     color: #bb594c;
     /* 按钮文字颜色，主题色 */
-    font-size: 22px;
+    font-size: 20px;
     /* 按钮字体大小 */
     font-weight: 600;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
