@@ -152,7 +152,7 @@ export default {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    padding: 20px;
+    padding: 10px;
 }
 
 .quiz-container {
@@ -166,7 +166,7 @@ export default {
     /* 卡片背景色 */
     border-radius: 24px;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
-    padding: 60px;
+    padding: 40px;
     /* 卡片内部的间距（四周：上、右、下、左） */
     margin-bottom: 30px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
