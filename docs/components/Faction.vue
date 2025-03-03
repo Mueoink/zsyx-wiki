@@ -261,7 +261,7 @@ export default {
 .option-button,
 .restart-button,
 .previous-button {
-    padding: 20px 15px;
+    padding: 20px 10px;
     border: none;
     border-radius: 14px;
     background-color: #fff;
