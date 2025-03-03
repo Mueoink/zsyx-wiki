@@ -29,7 +29,10 @@ export default defineConfig({
         {
           text: "开始",
           collapsed: false,
-          items: [{ text: "介绍", link: "/wiki/start" }],
+          items: [
+            { text: "介绍", link: "/wiki/start" },
+            { text: "信仰测试", link: "/wiki/test" },
+          ],
         },
 
         // 总览
