@@ -46,14 +46,14 @@ export default {
     data() {
         return {
             currentQuestionIndex: 0,
-            factionScores: {},
-            initialFactionScores: {}, // 用于存储初始大类分数
+            factionScores: {}, // 分支信仰得分 (分支初始分)
+            initialFactionScores: {}, // 主信仰初始得分 (仅主信仰)
             topFaction: null,
             secondFaction: null,
             topFactionBranch: null,
             secondFactionBranch: null,
-            factions: ['生命', '沉沦', '文明', '混沌', '存在', '虚无'], // 内置信仰列表
-            factionBranches: { // 内置信仰分支关系
+            factions: ['生命', '沉沦', '文明', '混沌', '存在', '虚无'],
+            factionBranches: {
                 '生命': ['诞育', '繁荣', '死亡'],
                 '沉沦': ['污堕', '腐朽', '湮灭'],
                 '文明': ['秩序', '真理', '战争'],
@@ -61,7 +61,7 @@ export default {
                 '存在': ['记忆', '时间'],
                 '虚无': ['欺诈', '命运'],
             },
-            opposingFactions: { // 对立信仰关系
+            opposingFactions: {
                 '生命': '沉沦',
                 '沉沦': '生命',
                 '文明': '混沌',
@@ -77,14 +77,13 @@ export default {
     methods: {
         initializeFactionScores() {
             this.factions.forEach((faction) => {
-                this.factionScores[faction] = 0; // 初始化主信仰分数
-                this.initialFactionScores[faction] = 0; // 初始化初始主信仰分数
-                if (this.factionBranches[faction]) {
-                    this.factionBranches[faction].forEach(branch => {
-                        this.factionScores[branch] = 0; // 初始化信仰分支分数
-                    });
-                }
+                this.initialFactionScores[faction] = 0; // 初始化主信仰初始分数
             });
+            for (const faction in this.factionBranches) {
+                this.factionBranches[faction].forEach(branch => {
+                    this.factionScores[branch] = 0; // 初始化分支信仰分数
+                });
+            }
         },
         selectOption(optionText, optionIndex) {
             const currentQuestion = this.questions[this.currentQuestionIndex];
@@ -94,10 +93,9 @@ export default {
                 for (const factionOrBranch in selectedOptionScores) {
                     const score = selectedOptionScores[factionOrBranch];
                     if (this.factions.includes(factionOrBranch)) {
-                        this.initialFactionScores[factionOrBranch] += score; // 累加到初始大类分数
-                        this.factionScores[factionOrBranch] += score; // 累加到大类分数 (初始值也会被用于后续计算)
+                        this.initialFactionScores[factionOrBranch] += score; // 累加主信仰初始分
                     } else if (this.factionBranches[Object.keys(this.factionBranches).find(key => this.factionBranches[key].includes(factionOrBranch))]) {
-                        this.factionScores[factionOrBranch] += score; // 累加到分支分数
+                        this.factionScores[factionOrBranch] += score; // 累加分支信仰分数
                     }
                 }
             }
@@ -109,41 +107,156 @@ export default {
             }
         },
         calculateResults() {
-            const mainFactionFinalScores = {};
-            this.factions.forEach(faction => {
-                let branchScoreSum = 0;
-                if (this.factionBranches[faction]) {
-                    this.factionBranches[faction].forEach(branch => {
-                        branchScoreSum += this.factionScores[branch]; // 计算分支分数总和
+            const mainFactionTotalScores = {}; // 存储主信仰总分
+
+            // 1. & 2. 步骤在 selectOption 中已完成：
+            //    - initialFactionScores 存储主信仰初始分
+            //    - factionScores 存储分支信仰初始分
+
+            // 3. 计算主信仰总分
+            for (const mainFaction in this.factions) {
+                const factionName = this.factions[mainFaction];
+                let totalBranchInitialScore = 0;
+                if (this.factionBranches[factionName]) { // 确保存在分支
+                    this.factionBranches[factionName].forEach(branch => {
+                        totalBranchInitialScore += this.factionScores[branch] || 0;
                     });
                 }
-                const opposingFaction = this.opposingFactions[faction];
-                const opposingFactionInitialScore = this.initialFactionScores[opposingFaction] || 0; // 获取对立大类的初始分数
-                mainFactionFinalScores[faction] = (0.5 * branchScoreSum) + this.initialFactionScores[faction] - (0.25 * opposingFactionInitialScore); // 计算最终大类分数
-            });
 
-            const sortedMainFactions = Object.entries(mainFactionFinalScores)
-                .sort(([, scoreA], [, scoreB]) => scoreB - scoreA)
-                .map(([faction]) => faction);
+                const mainFactionInitialScore = this.initialFactionScores[factionName] || 0;
+                const opposingMainFactionName = this.opposingFactions[factionName];
+                const opposingMainFactionInitialScore = this.initialFactionScores[opposingMainFactionName] || 0;
 
-            this.topFaction = sortedMainFactions[0] || '未知信仰';
-            this.secondFaction = sortedMainFactions[1] || '其他信仰';
+                mainFactionTotalScores[factionName] = mainFactionInitialScore + (totalBranchInitialScore * 0.6) - (opposingMainFactionInitialScore * 0.2);
+            }
 
-            this.topFactionBranch = this.findTopBranch(this.topFaction);
-            this.secondFactionBranch = this.findTopBranch(this.secondFaction);
-        },
-        findTopBranch(factionName) {
-            let topBranch = '无分支'; // 默认无分支
-            let topBranchScore = -Infinity;
-            if (this.factionBranches[factionName]) {
-                this.factionBranches[factionName].forEach(branch => {
-                    if (this.factionScores[branch] > topBranchScore) {
-                        topBranchScore = this.factionScores[branch];
-                        topBranch = branch;
+            // 4. 确定主结果
+            let topFactionName = null;
+            let maxMainFactionScore = -Infinity;
+
+            for (const faction in mainFactionTotalScores) {
+                if (mainFactionTotalScores[faction] > maxMainFactionScore) {
+                    maxMainFactionScore = mainFactionTotalScores[faction];
+                    topFactionName = faction;
+                }
+            }
+            this.topFaction = topFactionName || '未知信仰';
+
+
+            let topBranchName = null;
+            let maxBranchInitialScore = -Infinity;
+            if (this.factionBranches[topFactionName]) {
+                this.factionBranches[topFactionName].forEach(branch => {
+                    if (this.factionScores[branch] > maxBranchInitialScore) {
+                        maxBranchInitialScore = this.factionScores[branch];
+                        topBranchName = branch;
                     }
                 });
             }
-            return topBranch;
+            this.topFactionBranch = topBranchName || '无分支';
+
+
+            //  次要结果部分 (保持原逻辑，并修改部分)
+            const finalBranchScoresForSecondary = {};
+            for (const mainFaction in this.factionBranches) {
+                const branches = this.factionBranches[mainFaction];
+                const currentFinalMainFactionScore = mainFactionTotalScores[mainFaction];
+                branches.forEach(branch => {
+                    const branchInitialScore = this.factionScores[branch] || 0;
+                    const safeDivide = (numerator, denominator) => {
+                        const den = Math.max(1, denominator);
+                        return numerator / den;
+                    };
+                    finalBranchScoresForSecondary[branch] = safeDivide(branchInitialScore, currentFinalMainFactionScore) * branchInitialScore * 1.1;
+                });
+            }
+
+
+            const sortedBranchesForSecondary = Object.entries(finalBranchScoresForSecondary)
+                .sort(([, scoreA], [, scoreB]) => scoreB - scoreA)
+                .map(([branch]) => branch);
+
+            const topBranchSecondary = sortedBranchesForSecondary[0];
+            let secondaryBranchResult = null;
+
+
+            if (topBranchSecondary) {
+                let topBranchMainFactionForSecondary = null;
+                for (const faction in this.factionBranches) {
+                    if (this.factionBranches[faction].includes(topBranchSecondary)) {
+                        topBranchMainFactionForSecondary = faction;
+                        break;
+                    }
+                }
+
+                if (topBranchMainFactionForSecondary === this.topFaction) {
+                    let firstNonTopFactionBranch = null;
+                    for (const branch of sortedBranchesForSecondary) {
+                        let branchMainFaction = null;
+                        for (const faction in this.factionBranches) {
+                            if (this.factionBranches[faction].includes(branch)) {
+                                branchMainFaction = faction;
+                                break;
+                            }
+                        }
+                        if (branchMainFaction !== this.topFaction) {
+                            firstNonTopFactionBranch = branch;
+                            break;
+                        }
+                    }
+
+                    if (firstNonTopFactionBranch) { // 原有逻辑保持不变
+                        const topBranchSecondaryScore = finalBranchScoresForSecondary[topBranchSecondary] || 0;
+                        const firstNonTopFactionBranchScore = finalBranchScoresForSecondary[firstNonTopFactionBranch] || 0;
+                        const coefficient = topBranchSecondaryScore / (topBranchSecondaryScore + firstNonTopFactionBranchScore);
+
+                        if (coefficient >= 0.45) {
+                            secondaryBranchResult = topBranchSecondary;
+                        } else {
+                            secondaryBranchResult = firstNonTopFactionBranch;
+                        }
+                    } else { // 修改部分：未找到其余主信仰分支时
+                        const topFactionBranchesSorted = sortedBranchesForSecondary.filter(branch => {
+                            for (const faction in this.factionBranches) {
+                                if (faction === this.topFaction && this.factionBranches[faction].includes(branch)) {
+                                    return true;
+                                }
+                            }
+                            return false;
+                        });
+                        if (topFactionBranchesSorted.length >= 2) {
+                            secondaryBranchResult = topFactionBranchesSorted[1]; // 选择第二高分支
+                        } else {
+                            secondaryBranchResult = '其他分支'; // 如果不足两个分支，则为 '其他分支'
+                        }
+                    }
+
+
+                } else {
+                    secondaryBranchResult = topBranchSecondary; // 原有逻辑保持不变
+                }
+            }
+
+
+            this.secondFactionBranch = secondaryBranchResult || '其他分支';
+            if (this.secondFactionBranch && this.secondFactionBranch !== '其他分支') {
+                for (const faction in this.factionBranches) {
+                    if (this.factionBranches[faction].includes(this.secondFactionBranch)) {
+                        this.secondFaction = faction;
+                        break;
+                    }
+                }
+            } else {
+                this.secondFaction = '其他信仰';
+            }
+
+
+            if (!this.secondFaction) this.secondFaction = '其他信仰';
+
+
+        },
+        findTopBranch(factionName) { // 移除，不再需要
+            return 'N/A'; // 结果直接取最高分支，不再需要findTopBranch
         },
         restartQuiz() {
             this.currentQuestionIndex = 0;
