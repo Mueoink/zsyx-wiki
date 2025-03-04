@@ -21,7 +21,7 @@
                     <span class="result-title">测试完成！</span>
                 </div>
                 <h2 class="result-faction-title">你更适合作为<span class="faction-name">【{{ topFaction
-                        }}】{{ topFactionBranch }}</span> 的信徒</h2>
+                }}】{{ topFactionBranch }}</span> 的信徒</h2>
                 <p class="result-faction-second">当然，如果你不愿意，也可以试试<span class="faction-name">【{{
                     secondFaction }}】{{ secondFactionBranch }}</span>
                 </p>
@@ -47,6 +47,7 @@ export default {
         return {
             currentQuestionIndex: 0,
             factionScores: {},
+            initialFactionScores: {}, // 用于存储初始大类分数
             topFaction: null,
             secondFaction: null,
             topFactionBranch: null,
@@ -60,6 +61,14 @@ export default {
                 '存在': ['记忆', '时间'],
                 '虚无': ['欺诈', '命运'],
             },
+            opposingFactions: { // 对立信仰关系
+                '生命': '沉沦',
+                '沉沦': '生命',
+                '文明': '混沌',
+                '混沌': '文明',
+                '存在': '虚无',
+                '虚无': '存在',
+            },
         };
     },
     mounted() {
@@ -69,9 +78,10 @@ export default {
         initializeFactionScores() {
             this.factions.forEach((faction) => {
                 this.factionScores[faction] = 0; // 初始化主信仰分数
+                this.initialFactionScores[faction] = 0; // 初始化初始主信仰分数
                 if (this.factionBranches[faction]) {
                     this.factionBranches[faction].forEach(branch => {
-                        this.factionScores[branch] = 0; // 初始化信仰分数
+                        this.factionScores[branch] = 0; // 初始化信仰分支分数
                     });
                 }
             });
@@ -83,8 +93,11 @@ export default {
             if (selectedOptionScores) {
                 for (const factionOrBranch in selectedOptionScores) {
                     const score = selectedOptionScores[factionOrBranch];
-                    if (this.factionScores.hasOwnProperty(factionOrBranch)) {
-                        this.factionScores[factionOrBranch] += score;
+                    if (this.factions.includes(factionOrBranch)) {
+                        this.initialFactionScores[factionOrBranch] += score; // 累加到初始大类分数
+                        this.factionScores[factionOrBranch] += score; // 累加到大类分数 (初始值也会被用于后续计算)
+                    } else if (this.factionBranches[Object.keys(this.factionBranches).find(key => this.factionBranches[key].includes(factionOrBranch))]) {
+                        this.factionScores[factionOrBranch] += score; // 累加到分支分数
                     }
                 }
             }
@@ -96,17 +109,20 @@ export default {
             }
         },
         calculateResults() {
-            const mainFactionTotalScores = {};
+            const mainFactionFinalScores = {};
             this.factions.forEach(faction => {
-                mainFactionTotalScores[faction] = this.factionScores[faction]; // 初始主信仰分数
+                let branchScoreSum = 0;
                 if (this.factionBranches[faction]) {
                     this.factionBranches[faction].forEach(branch => {
-                        mainFactionTotalScores[faction] += this.factionScores[branch]; // 累加分支分数到主信仰
+                        branchScoreSum += this.factionScores[branch]; // 计算分支分数总和
                     });
                 }
+                const opposingFaction = this.opposingFactions[faction];
+                const opposingFactionInitialScore = this.initialFactionScores[opposingFaction] || 0; // 获取对立大类的初始分数
+                mainFactionFinalScores[faction] = (0.5 * branchScoreSum) + this.initialFactionScores[faction] - (0.25 * opposingFactionInitialScore); // 计算最终大类分数
             });
 
-            const sortedMainFactions = Object.entries(mainFactionTotalScores)
+            const sortedMainFactions = Object.entries(mainFactionFinalScores)
                 .sort(([, scoreA], [, scoreB]) => scoreB - scoreA)
                 .map(([faction]) => faction);
 
