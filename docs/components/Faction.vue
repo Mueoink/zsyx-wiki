@@ -26,7 +26,43 @@
                     secondFaction }}】{{ secondFactionBranch }}</span>
                 </p>
                 <div class="result-description">
-                    <p> 测试结果仅供参考 ~ </p>
+                    <p> 测试并非权威,结果仅供参考 </p>
+
+                    <div class="charts-container">
+                        <!-- 主信仰偏向 (包含正负) -->
+                        <div v-if="mainFactionPreferenceData.length > 0" class="bar-chart-wrapper">
+                            <h3 class="chart-title">主信仰偏向</h3>
+                            <div class="chart-bars">
+                                <div v-for="(factionData, index) in mainFactionPreferenceData" :key="index"
+                                    class="chart-bar-item">
+                                    <span class="bar-label">{{ factionData.name }} ({{ factionData.percentage
+                                        }}%)</span>
+                                    <div class="bar-container">
+                                        <div class="bar"
+                                            :class="{ positive: factionData.score >= 0, negative: factionData.score < 0 }"
+                                            :style="{ width: factionData.percentageValue + '%' }"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 分支信仰偏向 (包含正负) -->
+                        <div v-if="branchFactionPreferenceData.length > 0" class="bar-chart-wrapper">
+                            <h3 class="chart-title">分支信仰偏向</h3>
+                            <div class="chart-bars">
+                                <div v-for="(branchData, index) in branchFactionPreferenceData" :key="index"
+                                    class="chart-bar-item">
+                                    <span class="bar-label">{{ branchData.name }} ({{ branchData.percentage }}%)</span>
+                                    <div class="bar-container">
+                                        <div class="bar"
+                                            :class="{ positive: branchData.score >= 0, negative: branchData.score < 0 }"
+                                            :style="{ width: branchData.percentageValue + '%' }"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
                 <button class="restart-button" @click="restartQuiz">重新测试</button>
             </div>
@@ -69,6 +105,9 @@ export default {
                 '存在': '虚无',
                 '虚无': '存在',
             },
+
+            mainFactionPreferenceData: [], // 主信仰偏向
+            branchFactionPreferenceData: [], // 分支信仰偏向
         };
     },
     mounted() {
@@ -77,11 +116,11 @@ export default {
     methods: {
         initializeFactionScores() {
             this.factions.forEach((faction) => {
-                this.initialFactionScores[faction] = 0; // 初始化主信仰初始分数
+                this.initialFactionScores[faction] = 0; 
             });
             for (const faction in this.factionBranches) {
                 this.factionBranches[faction].forEach(branch => {
-                    this.factionScores[branch] = 0; // 初始化分支信仰分数
+                    this.factionScores[branch] = 0; 
                 });
             }
         },
@@ -93,7 +132,7 @@ export default {
                 for (const factionOrBranch in selectedOptionScores) {
                     const score = selectedOptionScores[factionOrBranch];
                     if (this.factions.includes(factionOrBranch)) {
-                        this.initialFactionScores[factionOrBranch] += score; // 累加主信仰初始分
+                        this.initialFactionScores[factionOrBranch] += score; 
                     } else if (this.factionBranches[Object.keys(this.factionBranches).find(key => this.factionBranches[key].includes(factionOrBranch))]) {
                         this.factionScores[factionOrBranch] += score; // 累加分支信仰分数
                     }
@@ -109,17 +148,15 @@ export default {
         calculateResults() {
             const mainFactionTotalScores = {}; // 存储主信仰总分
 
-            // 1. & 2. 步骤在 selectOption 中已完成：
-            //    - initialFactionScores 存储主信仰初始分
-            //    - factionScores 存储分支信仰初始分
 
-            // 3. 计算主信仰总分
-            for (const mainFaction in this.factions) {
-                const factionName = this.factions[mainFaction];
+            // 主信仰总分
+            for (const factionName of this.factions) { 
                 let totalBranchInitialScore = 0;
+                let branchCount = 0;
                 if (this.factionBranches[factionName]) { // 确保存在分支
                     this.factionBranches[factionName].forEach(branch => {
                         totalBranchInitialScore += this.factionScores[branch] || 0;
+                        branchCount++;
                     });
                 }
 
@@ -127,21 +164,27 @@ export default {
                 const opposingMainFactionName = this.opposingFactions[factionName];
                 const opposingMainFactionInitialScore = this.initialFactionScores[opposingMainFactionName] || 0;
 
-                mainFactionTotalScores[factionName] = mainFactionInitialScore + (totalBranchInitialScore * 0.6) - (opposingMainFactionInitialScore * 0.2);
+                // 主信仰最终得分计算
+                const averageBranchScore = branchCount > 0 ? totalBranchInitialScore / branchCount : 0; // Calculate average branch score
+                mainFactionTotalScores[factionName] = mainFactionInitialScore + (averageBranchScore * 0.6) - (opposingMainFactionInitialScore * 0.2);
             }
 
-            // 4. 确定主结果
+
+            // 主结果
             let topFactionName = null;
             let maxMainFactionScore = -Infinity;
+            let sortedMainFactions = [];
 
             for (const faction in mainFactionTotalScores) {
+                sortedMainFactions.push({ name: faction, score: mainFactionTotalScores[faction] });
                 if (mainFactionTotalScores[faction] > maxMainFactionScore) {
                     maxMainFactionScore = mainFactionTotalScores[faction];
                     topFactionName = faction;
                 }
             }
+            sortedMainFactions.sort((a, b) => b.score - a.score); // 降序
             this.topFaction = topFactionName || '未知信仰';
-
+            this.secondFaction = sortedMainFactions[1]?.name || '其他信仰';
 
             let topBranchName = null;
             let maxBranchInitialScore = -Infinity;
@@ -156,18 +199,16 @@ export default {
             this.topFactionBranch = topBranchName || '无分支';
 
 
-            //  次要结果部分 (保持原逻辑，并修改部分)
+            //  次要结果
             const finalBranchScoresForSecondary = {};
-            for (const mainFaction in this.factionBranches) {
-                const branches = this.factionBranches[mainFaction];
-                const currentFinalMainFactionScore = mainFactionTotalScores[mainFaction];
+            for (const faction in this.factionBranches) {
+                const branches = this.factionBranches[faction];
+                const mainFactionInitial = this.initialFactionScores[faction] || 0;
+                const opposingFactionInitial = this.initialFactionScores[this.opposingFactions[faction]] || 0;
+
                 branches.forEach(branch => {
                     const branchInitialScore = this.factionScores[branch] || 0;
-                    const safeDivide = (numerator, denominator) => {
-                        const den = Math.max(1, denominator);
-                        return numerator / den;
-                    };
-                    finalBranchScoresForSecondary[branch] = safeDivide(branchInitialScore, currentFinalMainFactionScore) * branchInitialScore * 1.1;
+                    finalBranchScoresForSecondary[branch] = branchInitialScore + (0.75 * mainFactionInitial) - (0.15 * opposingFactionInitial);
                 });
             }
 
@@ -176,11 +217,19 @@ export default {
                 .sort(([, scoreA], [, scoreB]) => scoreB - scoreA)
                 .map(([branch]) => branch);
 
-            const topBranchSecondary = sortedBranchesForSecondary[0];
             let secondaryBranchResult = null;
+            const filteredBranchesForSecondary = sortedBranchesForSecondary.filter(branch => {
+                if (finalBranchScoresForSecondary[branch] < 0) return false;
+                // 排除 topFactionBranch
+                if (branch === this.topFactionBranch) return false;
+                return true;
+            });
 
 
-            if (topBranchSecondary) {
+            if (filteredBranchesForSecondary.length > 0) {
+                const topBranchSecondary = filteredBranchesForSecondary[0];
+
+
                 let topBranchMainFactionForSecondary = null;
                 for (const faction in this.factionBranches) {
                     if (this.factionBranches[faction].includes(topBranchSecondary)) {
@@ -190,50 +239,35 @@ export default {
                 }
 
                 if (topBranchMainFactionForSecondary === this.topFaction) {
-                    let firstNonTopFactionBranch = null;
-                    for (const branch of sortedBranchesForSecondary) {
-                        let branchMainFaction = null;
+                    if (filteredBranchesForSecondary.length >= 2) {
+                        const secondBranchSecondary = filteredBranchesForSecondary[1];
+                        let secondBranchMainFaction = null;
                         for (const faction in this.factionBranches) {
-                            if (this.factionBranches[faction].includes(branch)) {
-                                branchMainFaction = faction;
+                            if (this.factionBranches[faction].includes(secondBranchSecondary)) {
+                                secondBranchMainFaction = faction;
                                 break;
                             }
                         }
-                        if (branchMainFaction !== this.topFaction) {
-                            firstNonTopFactionBranch = branch;
-                            break;
-                        }
-                    }
-
-                    if (firstNonTopFactionBranch) { // 原有逻辑保持不变
-                        const topBranchSecondaryScore = finalBranchScoresForSecondary[topBranchSecondary] || 0;
-                        const firstNonTopFactionBranchScore = finalBranchScoresForSecondary[firstNonTopFactionBranch] || 0;
-                        const coefficient = topBranchSecondaryScore / (topBranchSecondaryScore + firstNonTopFactionBranchScore);
-
-                        if (coefficient >= 0.45) {
+                        if (secondBranchMainFaction === this.topFaction) {
                             secondaryBranchResult = topBranchSecondary;
                         } else {
-                            secondaryBranchResult = firstNonTopFactionBranch;
-                        }
-                    } else { // 修改部分：未找到其余主信仰分支时
-                        const topFactionBranchesSorted = sortedBranchesForSecondary.filter(branch => {
-                            for (const faction in this.factionBranches) {
-                                if (faction === this.topFaction && this.factionBranches[faction].includes(branch)) {
-                                    return true;
-                                }
+                            const topBranchSecondaryScore = finalBranchScoresForSecondary[topBranchSecondary] || 0;
+                            const secondBranchSecondaryScore = finalBranchScoresForSecondary[secondBranchSecondary] || 0;
+                            const coefficient = secondBranchSecondaryScore === 0 ? 0 : topBranchSecondaryScore / secondBranchSecondaryScore;
+                            if (coefficient >= 0.65) {
+                                secondaryBranchResult = topBranchSecondary;
+                            } else {
+                                secondaryBranchResult = secondBranchSecondary;
                             }
-                            return false;
-                        });
-                        if (topFactionBranchesSorted.length >= 2) {
-                            secondaryBranchResult = topFactionBranchesSorted[1]; // 选择第二高分支
-                        } else {
-                            secondaryBranchResult = '其他分支'; // 如果不足两个分支，则为 '其他分支'
+
                         }
+                    } else {
+                        secondaryBranchResult = topBranchSecondary;
                     }
 
 
                 } else {
-                    secondaryBranchResult = topBranchSecondary; // 原有逻辑保持不变
+                    secondaryBranchResult = topBranchSecondary;
                 }
             }
 
@@ -250,14 +284,70 @@ export default {
                 this.secondFaction = '其他信仰';
             }
 
-
             if (!this.secondFaction) this.secondFaction = '其他信仰';
 
 
+            // 主信仰偏向
+            const mainFactionPreferenceChartData = [];
+            let totalPositiveMainFactionScore = 0;
+            let totalNegativeMainFactionScoreAbs = 0;
+
+            for (const faction in mainFactionTotalScores) {
+                if (mainFactionTotalScores[faction] >= 0) {
+                    totalPositiveMainFactionScore += mainFactionTotalScores[faction];
+                } else {
+                    totalNegativeMainFactionScoreAbs += Math.abs(mainFactionTotalScores[faction]);
+                }
+            }
+
+            for (const faction in mainFactionTotalScores) {
+                let percentage = '0';
+                let percentageValue = 0;
+                if (mainFactionTotalScores[faction] >= 0 && totalPositiveMainFactionScore > 0) {
+                    percentageValue = parseFloat(((mainFactionTotalScores[faction] / totalPositiveMainFactionScore) * 100).toFixed(1));
+                    percentage = percentageValue.toFixed(1);
+                } else if (mainFactionTotalScores[faction] < 0 && totalNegativeMainFactionScoreAbs > 0) {
+                    percentageValue = parseFloat(((Math.abs(mainFactionTotalScores[faction]) / totalNegativeMainFactionScoreAbs) * 100).toFixed(1));
+                    percentage = "-" + percentageValue.toFixed(1);
+                }
+                mainFactionPreferenceChartData.push({ name: faction, percentage: percentage, percentageValue: Math.abs(percentageValue), score: mainFactionTotalScores[faction] });
+            }
+            mainFactionPreferenceChartData.sort((a, b) => b.score - a.score);
+            this.mainFactionPreferenceData = mainFactionPreferenceChartData;
+
+
+            // 分支信仰偏向
+            const branchFactionPreferenceChartData = [];
+            let totalPositiveBranchScore = 0;
+            let totalNegativeBranchScoreAbs = 0;
+
+            for (const branch in finalBranchScoresForSecondary) {
+                if (finalBranchScoresForSecondary[branch] >= 0) {
+                    totalPositiveBranchScore += finalBranchScoresForSecondary[branch];
+                } else {
+                    totalNegativeBranchScoreAbs += Math.abs(finalBranchScoresForSecondary[branch]);
+                }
+            }
+
+
+            for (const branch in finalBranchScoresForSecondary) {
+                let percentage = '0';
+                let percentageValue = 0;
+                if (finalBranchScoresForSecondary[branch] >= 0 && totalPositiveBranchScore > 0) {
+                    percentageValue = parseFloat(((finalBranchScoresForSecondary[branch] / totalPositiveBranchScore) * 100).toFixed(1));
+                    percentage = percentageValue.toFixed(1);
+                } else if (finalBranchScoresForSecondary[branch] < 0 && totalNegativeBranchScoreAbs > 0) {
+                    percentageValue = parseFloat(((Math.abs(finalBranchScoresForSecondary[branch]) / totalNegativeBranchScoreAbs) * 100).toFixed(1));
+                    percentage = "-" + percentageValue.toFixed(1);
+                }
+                branchFactionPreferenceChartData.push({ name: branch, percentage: percentage, percentageValue: Math.abs(percentageValue), score: finalBranchScoresForSecondary[branch] });
+            }
+            branchFactionPreferenceChartData.sort((a, b) => b.score - a.score);
+            this.branchFactionPreferenceData = branchFactionPreferenceChartData;
+
+
         },
-        findTopBranch(factionName) { // 移除，不再需要
-            return 'N/A'; // 结果直接取最高分支，不再需要findTopBranch
-        },
+
         restartQuiz() {
             this.currentQuestionIndex = 0;
             this.initializeFactionScores();
@@ -265,12 +355,17 @@ export default {
             this.secondFaction = null;
             this.topFactionBranch = null;
             this.secondFactionBranch = null;
+
+            this.mainFactionPreferenceData = [];
+            this.branchFactionPreferenceData = [];
+
         },
         previousQuestion() {
             if (this.currentQuestionIndex > 0) {
                 this.currentQuestionIndex--;
             }
         },
+
     },
 };
 </script>
@@ -443,7 +538,8 @@ export default {
     color: #777;
     /* 描述文字颜色 */
     line-height: 1.8;
-    margin-top: 30px;
+    margin-top: 10px;
+    /* 修改 margin-top 值 */
 }
 
 .result-description p {
@@ -453,7 +549,7 @@ export default {
 }
 
 .restart-button {
-    margin-top: 40px;
+    margin-top: 30px;
     padding: 22px 44px;
     border-radius: 16px;
     font-size: 24px;
@@ -482,5 +578,75 @@ export default {
 
 .previous-button {
     margin-right: 20px;
+}
+
+/* 图表容器样式 */
+.charts-container {
+    display: flex;
+    flex-direction: column;
+    /* 垂直排列 */
+    gap: 20px;
+    /* 图表之间的垂直间距 */
+    margin-top: 20px;
+}
+
+
+/* 条形图样式 */
+.bar-chart-wrapper {
+    padding: 15px;
+    border-radius: 12px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    margin-bottom: 10px;
+}
+
+.chart-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 10px;
+    text-align: center;
+    margin-top: 0;
+}
+
+.chart-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.chart-bar-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.bar-label {
+    font-size: 14px;
+    color: #666;
+}
+
+.bar-container {
+    background-color: #e0e0e0;
+    border-radius: 8px;
+    height: 15px;
+    overflow: hidden;
+}
+
+.bar {
+    height: 100%;
+    border-radius: 8px;
+    transition: width 0.5s ease;
+    width: 0%;
+}
+
+.bar.positive {
+    background-color: #7bd1ad;
+    /* 正数条形图颜色 */
+}
+
+.bar.negative {
+    background-color: #f25f5c;
+    /* 负数条形图颜色 */
 }
 </style>
