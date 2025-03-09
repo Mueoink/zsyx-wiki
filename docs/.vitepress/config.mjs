@@ -80,6 +80,10 @@ export default defineConfig({
                   collapsed: true,
                   items: [
                     {
+                      text: "繁荣",
+                      link: "/wiki/gods/main/life/prosperity.md",
+                    },
+                    {
                       text: "死亡",
                       link: "/wiki/gods/main/life/dead.md",
                     },

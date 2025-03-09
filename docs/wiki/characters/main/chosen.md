@@ -26,6 +26,14 @@ const teamMembers = [
     text: '粟尘',
   },
 ];
+
+const zhangjizu = [
+  { src: '/chosen/zhangjizu_1.jpg', text: 'by:世界予眠' },
+]
+
+const moshu = [
+  { src: '/chosen/moshu_1.png', text: 'by:世界予眠' },
+]
 </script>
 
 :::
@@ -135,6 +143,8 @@ const teamMembers = [
 
 **外貌特征：**
 
+[同人画作](#同人画作)  
+
 一个穿着复古工装的眯眯眼，看上去像个水管工，脸上一直带着笑，干净利落的头发，鬓角未曾修理，气质偏冷，哪怕笑的眯眼也有一种生人勿近的冷。
 试炼后期（再次复活后）穿长袍，退出试炼后穿墓园工作服。
 
@@ -169,6 +179,9 @@ const teamMembers = [
 ### 所属势力
 丑角 - 详见词条 [丑角](/wiki/organization/player/clown.md)
 
+### 同人画作
+
+<Gallery :images= "zhangjizu" />
 
 ## [湮灭神选] - 墨殊
 
@@ -182,7 +195,10 @@ const teamMembers = [
 `初次登场-第343章-乐，这开局太乐了`  
 `正式登场-第344章-另日刺客`
 
-**外貌特征：** 
+**外貌特征：**   
+
+[同人画作](#同人画作-1)  
+
 这位穿着一身大风衣手上还提着一个复古木箱的队友看上去像是什么神秘组织的接头人。  
 
 **性格分析：**  
@@ -209,6 +225,9 @@ const teamMembers = [
 ### 备注
 墨殊之前当过【小蛋糕】神选
 
+### 同人画作
+
+<Gallery :images= "moshu" />
 
 ## [痴愚神选] - 韦牧
 
@@ -246,9 +265,9 @@ const teamMembers = [
 我反问祂：你既然如此智慧，为何还能让其他十五位神明与你平起平坐？”
 
 ### 关联角色  
-[**程实**](/wiki/characters/main/cheng_shi.md)－打工
-红霖－合作
-阿夫洛斯－打（黑）工
+[**程实**](/wiki/characters/main/cheng_shi.md)－打工  
+红霖－合作  
+阿夫洛斯－打（黑）工  
 
 ### 所属势力  
 歌尔多德实验室

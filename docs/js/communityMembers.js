@@ -24,4 +24,9 @@ export const communityMembers = [
     name: "风和水",
     title: "同人作者",
   },
+  {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=1127392685&s=640",
+    name: "世界予眠",
+    title: "同人作者",
+  },
 ];

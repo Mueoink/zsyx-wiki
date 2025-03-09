@@ -54,4 +54,24 @@ export const teamMembers = [
     name: "1",
     title: "审核修订",
   },
+  {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=2661689417&s=640",
+    name: "槐安",
+    title: "内容贡献",
+  },
+  {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=2263780205&s=640",
+    name: "布吉岛",
+    title: "内容贡献",
+  },
+  {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=1967726850&s=640",
+    name: "诺维",
+    title: "内容贡献"
+  },
+  {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=2132170581&s=640",
+    name: "翎洛",
+    title: "审核修订",
+  },
 ];
