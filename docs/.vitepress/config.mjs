@@ -89,6 +89,38 @@ export default defineConfig({
                     },
                   ],
                 },
+                {
+                  text: "沉沦",
+                  collapsed: true,
+                  items: [
+                    {
+                      text: "污堕",
+                      link: "/wiki/gods/main/vice/fouling.md",
+                    },
+                    {
+                      text: "腐朽",
+                      link: "/wiki/gods/main/vice/rotten.md",
+                    },
+                    {
+                      text: "湮灭",
+                      link: "/wiki/gods/main/vice/annihilate.md",
+                    },
+                  ],
+                },
+                {
+                  text: "文明",
+                  collapsed: true,
+                  items: [
+                    {
+                      text: "秩序",
+                      link: "/wiki/gods/main/civilized/order.md",
+                    },
+                    {
+                      text: "战争",
+                      link: "/wiki/gods/main/civilized/war.md",
+                    },
+                  ],
+                },
               ],
             },
             {
@@ -307,6 +339,7 @@ export default defineConfig({
           items: [
             { text: "如何贡献", link: "/contribution/contribute" },
             { text: "编写要求", link: "/contribution/compile" },
+            { text: "内容管理流程规范", link: "/contribution/flow" },
             { text: "贡献审核指南", link: "/contribution/guide" },
             { text: "贡献团队", link: "/contribution/team" },
           ],
