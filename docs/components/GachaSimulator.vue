@@ -18,7 +18,6 @@
 
             <!-- 卡片展示区域 -->
             <div class="card-display-area">
-                <!-- 使用 transition 组件实现动画 -->
                 <transition name="card-reveal" mode="out-in">
                     <!-- 加载状态 -->
                     <div v-if="isDrawing" key="loading" class="loading-overlay">
@@ -26,10 +25,9 @@
                         <p>正在沟通虚空...</p>
                     </div>
                     <!-- 抽到的卡片 -->
-                    <div v-else-if="drawnCard" :key="drawnCard.name" class="card-display-wrapper">
-                        <!-- 应用等级类和 CSS 变量 -->
+                    <div v-else-if="drawnCard" :key="drawnCard.uniqueId" class="card-display-wrapper">
                         <div class="result-card" :class="getCardLevelClass(drawnCard.level)">
-                            <div class="card-shine"></div> <!-- 用于光泽效果 -->
+                            <div class="card-shine"></div>
                             <div class="card-header">
                                 <span class="card-level-tag" :class="'tag-' + getCardLevelClass(drawnCard.level)">
                                     {{ getCardLevelLabel(drawnCard.level) }}
@@ -38,7 +36,6 @@
                             </div>
                             <h2 class="card-name">{{ drawnCard.name }}</h2>
                             <div class="card-content">
-                                <!-- 应用 white-space: pre-line 以支持 \n 换行 -->
                                 <p class="card-text">{{ drawnCard.text }}</p>
                             </div>
                         </div>
@@ -49,12 +46,46 @@
                     </div>
                 </transition>
             </div>
+
+            <!-- 抽卡历史记录区域 -->
+            <div v-if="drawHistory.length > 0" class="draw-history-area">
+                <h3 class="history-title">祈求记录</h3>
+
+                <!-- 低等级卡片统计 -->
+                <div class="low-level-summary">
+                    <h4>低稀有度统计:</h4>
+                    <span v-for="level in [1, 2, 3]" :key="'summary-' + level" class="low-level-item">
+                        <span class="card-level-tag history-tag" :class="['tag-' + getCardLevelClass(level)]">
+                            {{ getCardLevelLabel(level) }}
+                        </span>
+                        : {{ lowLevelCounts[level] || 0 }} 个
+                    </span>
+                </div>
+
+                <!-- 高等级卡片列表 -->
+                <div class="high-level-list">
+                    <h4>高稀有度获得列表:</h4>
+                    <ul v-if="highLevelHistoryItems.length > 0">
+                        <!-- 修改 v-for 和 :key -->
+                        <li v-for="card in highLevelHistoryItems" :key="card.uniqueId" class="high-level-item">
+                            <span class="card-level-tag history-tag" :class="['tag-' + getCardLevelClass(card.level)]"
+                                >
+                                {{ getCardLevelLabel(card.level) }} 
+                            </span>
+                            <span class="history-card-name">{{ card.name }}</span> 
+                            
+                            <span class="history-card-count">(第 {{ card.drawNumber }} 次祈求)</span>
+                        </li>
+                    </ul>
+                    <p v-else class="no-high-level">尚未获得 A 级或以上物品</p>
+                </div>
+            </div>
+
         </div>
     </div>
 </template>
 
 <script>
-
 export default {
     name: 'GachaSimulator',
     props: {
@@ -69,35 +100,66 @@ export default {
             isDrawing: false,
             drawnCard: null,
             drawCount: 0,
+            drawHistory: [],
+            uniqueCounter: 0,
             probabilities: { 1: 37.4, 2: 32.5, 3: 16.5, 4: 9.0, 5: 3.54, 6: 1.42, 7: 0.13, 8: 0.001 },
             levelMap: { 0: '?', 1: 'D', 2: 'C', 3: 'B', 4: 'A', 5: 'S', 6: 'SS', 7: 'SSS', 8: 'SP' }
         };
+    },
+    computed: {
+        // 低等级统计保持不变
+        lowLevelCounts() {
+            const counts = { 1: 0, 2: 0, 3: 0 };
+            this.drawHistory.forEach(card => {
+                if (counts.hasOwnProperty(card.level)) {
+                    counts[card.level]++;
+                }
+            });
+            return counts;
+        },
+        // 修改：高等级历史记录现在直接返回过滤后的卡片对象
+        highLevelHistoryItems() {
+            // 直接过滤 drawHistory，保留 level >= 4 的卡片
+            // 这些卡片对象已经包含了 drawNumber 和 uniqueId
+            return this.drawHistory.filter(card => card.level >= 4);
+        }
     },
     methods: {
         performDraw() {
             if (this.isDrawing || !this.cardData || this.cardData.length === 0) return;
             this.isDrawing = true;
-            this.drawCount++;
+            this.drawCount++; // 先增加总次数
 
             setTimeout(() => {
                 const drawnLevel = this.determineDrawLevel();
                 const possibleCards = this.cardData.filter(card => card.level === drawnLevel);
                 let cardToDisplay = null;
+                const currentDrawCount = this.drawCount; // 获取当前的抽卡次数
 
                 if (possibleCards.length > 0) {
                     const randomIndex = Math.floor(Math.random() * possibleCards.length);
-                    cardToDisplay = possibleCards[randomIndex];
+                    cardToDisplay = {
+                        ...possibleCards[randomIndex],
+                        uniqueId: this.uniqueCounter++,
+                        drawNumber: currentDrawCount // <-- 存储抽到这张卡时的总次数
+                    };
                 } else {
                     console.warn(`警告：在卡池数据中找不到等级 ${drawnLevel} 的卡片。`);
                     cardToDisplay = {
                         name: "虚空回响",
                         text: `无法找到等级 ${this.getCardLevelLabel(drawnLevel)} (${drawnLevel}) 的有效卡片...`,
                         level: 0,
-                        card: "错误"
+                        card: "错误",
+                        uniqueId: this.uniqueCounter++,
+                        drawNumber: currentDrawCount // <-- 存储抽到这张卡时的总次数
                     };
                 }
+
                 this.drawnCard = cardToDisplay;
+                // 推入历史记录的卡片对象现在包含了 drawNumber
+                this.drawHistory.push(this.drawnCard);
                 this.isDrawing = false;
+
             }, 1200);
         },
 
@@ -106,22 +168,22 @@ export default {
             let cumulativeProbability = 0;
             const sortedLevels = Object.keys(this.probabilities)
                 .map(Number)
-                .sort((a, b) => this.probabilities[a] - this.probabilities[b]);
+                .sort((a, b) => a - b);
 
             for (const level of sortedLevels) {
                 const prob = this.probabilities[level];
-                if (typeof prob === 'number') {
+                if (typeof prob === 'number' && prob > 0) {
                     cumulativeProbability += prob;
                     if (random <= cumulativeProbability) {
                         return level;
                     }
-                } else {
+                } else if (prob !== 0) {
                     console.warn(`等级 ${level} 的概率配置无效: ${prob}`);
                 }
             }
-            console.warn("确定抽卡等级时概率总和可能存在问题或随机数异常。返回配置中的最低有效等级。");
-            const lowestValidLevel = sortedLevels.find(level => this.probabilities[level] > 0 && typeof this.probabilities[level] === 'number');
-            return lowestValidLevel !== undefined ? lowestValidLevel : 1;
+            console.warn("确定抽卡等级时概率总和可能不足100%或随机数异常。返回配置中的最低有效等级。");
+            const fallbackLevel = sortedLevels.find(level => this.probabilities[level] > 0 && typeof this.probabilities[level] === 'number');
+            return fallbackLevel !== undefined ? fallbackLevel : 1;
         },
 
         getCardLevelLabel(level) {
@@ -143,6 +205,10 @@ export default {
 
 body {
     margin: 0;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: #f8f9fa;
 }
 </style>
 
@@ -192,17 +258,12 @@ body {
     }
 }
 
-
 .gacha-simulator-page {
     display: flex;
     justify-content: center;
     align-items: flex-start;
     min-height: 100vh;
     padding: 40px 15px 60px;
-    background-color: #f8f9fa;
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
 }
 
 .gacha-container {
@@ -214,7 +275,6 @@ body {
     gap: 25px;
 }
 
-/* 抽卡按钮样式 */
 .draw-controls {
     margin-bottom: 5px;
 }
@@ -266,13 +326,11 @@ body {
     animation: button-spin 1s linear infinite;
 }
 
-/* 抽卡次数 */
 .draw-counter {
     color: #6c757d;
     font-size: 15px;
 }
 
-/* 卡片展示区域  */
 .card-display-area {
     width: 100%;
     min-height: 350px;
@@ -282,7 +340,6 @@ body {
     padding: 10px 0;
 }
 
-/* 加载遮罩和旋转器  */
 .loading-overlay {
     display: flex;
     flex-direction: column;
@@ -305,14 +362,12 @@ body {
     margin-bottom: 20px;
 }
 
-/* 卡片展示包裹器 */
 .card-display-wrapper {
     width: 100%;
     max-width: 400px;
     perspective: 1500px;
 }
 
-/* 结果卡片基础样式  */
 .result-card {
     --gradient-border: linear-gradient(110deg, #f1f3f5, #dee2e6, #f1f3f5);
     --gradient-opacity: 0.5;
@@ -341,7 +396,6 @@ body {
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
 }
 
-/* 流光边框 */
 .result-card::before {
     content: "";
     position: absolute;
@@ -361,7 +415,6 @@ body {
     transition: opacity 0.4s ease;
 }
 
-/* 初始占位 */
 .placeholder-card {
     width: 100%;
     max-width: 400px;
@@ -381,7 +434,6 @@ body {
     align-items: center;
     min-height: 290px;
 }
-
 
 .card-header {
     display: flex;
@@ -442,30 +494,23 @@ body {
     text-align: center;
     margin-bottom: 0;
     white-space: pre-line;
-    
 }
-
 
 .level-0 {
     --tag-bg-color: #6c757d;
     --gradient-border: linear-gradient(110deg, #dee2e6, #adb5bd, #dee2e6);
     --gradient-opacity: 0.4;
     --gradient-speed: 11s;
-
     --gradient-thickness: 1px;
 }
-
 
 .level-1 {
     --tag-bg-color: #adb5bd;
- 
     --gradient-border: linear-gradient(110deg, #f8f9fa, #e9ecef, #ced4da, #adb5bd, #ced4da, #e9ecef, #f8f9fa);
     --gradient-opacity: 0.5;
-
     --gradient-speed: 9s;
     --gradient-thickness: 1px;
 }
-
 
 .level-2 {
     --tag-bg-color: #52b788;
@@ -529,13 +574,11 @@ body {
     --shine-opacity: 0.55;
 }
 
-/* SP 级特殊名称颜色 */
 .level-8 .card-name {
     color: #a77c04;
     text-shadow: 0 1px 2px rgba(255, 255, 255, 0.2);
 }
 
-/* 光泽*/
 .card-shine {
     content: '';
     position: absolute;
@@ -553,7 +596,6 @@ body {
     z-index: 0;
 }
 
-/* 卡片出现/消失 */
 .card-reveal-enter-active {
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -580,5 +622,157 @@ body {
 .placeholder-card.card-reveal-leave-to {
     opacity: 0;
     transform: scale(0.9);
+}
+
+.draw-history-area {
+    width: 100%;
+    max-width: 480px;
+    margin-top: 30px;
+    padding: 25px;
+    background-color: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e9ecef;
+}
+
+.history-title {
+    text-align: center;
+    color: #495057;
+    font-size: 18px;
+    font-weight: 600;
+    margin-top: 0;
+    margin-bottom: 25px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.low-level-summary {
+    margin-bottom: 25px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 10px;
+}
+
+.low-level-summary h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 15px;
+    color: #6c757d;
+    font-weight: 500;
+}
+
+.low-level-item {
+    display: inline-block;
+    margin-right: 18px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #495057;
+    white-space: nowrap;
+}
+
+.history-tag {
+    padding: 4px 10px;
+    font-size: 11px;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.high-level-list h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 15px;
+    color: #343a40;
+    font-weight: 500;
+}
+
+.high-level-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.high-level-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 5px;
+    border-bottom: 1px dashed #e9ecef;
+    font-size: 14px;
+}
+
+.high-level-item:last-child {
+    border-bottom: none;
+}
+
+.history-card-name {
+    color: #343a40;
+    font-weight: 500;
+    margin-left: 5px;
+    margin-right: 8px;
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.history-card-count {
+    color: #adb5bd;
+    font-size: 13px;
+    white-space: nowrap;
+    margin-left: auto;
+}
+
+.no-high-level {
+    color: #adb5bd;
+    font-size: 14px;
+    text-align: center;
+    margin-top: 15px;
+    padding: 10px;
+}
+
+.tag-level-0 {
+    background: #6c757d;
+    color: #fff;
+}
+
+.tag-level-1 {
+    background: #adb5bd;
+    color: #fff;
+}
+
+.tag-level-2 {
+    background: #52b788;
+    color: #fff;
+}
+
+.tag-level-3 {
+    background: #4895ef;
+    color: #fff;
+}
+
+.tag-level-4 {
+    background: #a78bfa;
+    color: #fff;
+}
+
+.tag-level-5 {
+    background: #ffc107;
+    color: #493803;
+    text-shadow: none;
+}
+
+.tag-level-6 {
+    background: #fd7e14;
+    color: #fff;
+}
+
+.tag-level-7 {
+    background: linear-gradient(45deg, #e75aa0, #d63384, #b32a72);
+    color: #fff;
+}
+
+.tag-level-8 {
+    background: linear-gradient(45deg, #fde68a, #fcca46, #fca311);
+    color: #422006;
+    text-shadow: none;
 }
 </style>
