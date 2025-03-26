@@ -19,7 +19,7 @@
 
             <!-- 抽卡次数显示 -->
             <div class="draw-counter">
-                已祈求 {{ drawCount }} 次
+                已祈求 {{ drawCount }} 次 (距下次SS+保底 {{ pityThresholdSSPlus - pityCounterSSPlus }} 次)
             </div>
 
             <!-- 卡片展示区域 -->
@@ -116,17 +116,21 @@ export default {
             drawCount: 0,
             drawHistory: [],
             uniqueCounter: 0,
-            currentDrawType: 1, 
-            multiDrawHighestLevel: 0, 
-            // 单抽概率
-            // probabilities: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 100 },
-            probabilitiesSingle: { 1: 37.4, 2: 32, 3: 16.2, 4: 9.0, 5: 3.54, 6: 1.42, 7: 0.43, 8: 0.01 }, 
-            // 五连抽基础概率 
-            probabilitiesMulti: { 1: 44.573, 2: 30, 3: 15, 4: 6, 5: 3, 6: 1.2, 7: 0.22, 8: 0.007 },
-            // 五连抽中的保底概率
-            probabilitiesGuaranteedBPlus: { 3: 75.993, 4: 20, 5: 2, 6: 1.8, 7: 0.2, 8: 0.007 },
-            // 分级
-            levelMap: { 0: '?', 1: 'D', 2: 'C', 3: 'B', 4: 'A', 5: 'S', 6: 'SS', 7: 'SSS', 8: 'SP' }
+            currentDrawType: 1,
+            multiDrawHighestLevel: 0,
+            // 单抽
+            probabilitiesSingle: { 1: 37.4, 2: 32, 3: 16.2, 4: 9.0, 5: 3.54, 6: 1.42, 7: 0.43, 8: 0.01 },
+            // 五连基础
+            probabilitiesMulti: { 1: 44.595, 2: 30, 3: 15, 4: 6, 5: 3, 6: 1.2, 7: 0.2, 8: 0.005 },
+            // 五连保底
+            probabilitiesGuaranteedBPlus: { 3: 75.995, 4: 20.6, 5: 2, 6: 1.2, 7: 0.2, 8: 0.005 },
+            levelMap: { 0: '?', 1: 'D', 2: 'C', 3: 'B', 4: 'A', 5: 'S', 6: 'SS', 7: 'SSS', 8: 'SP' },
+            // 追踪SS+保底计数
+            pityCounterSSPlus: 0, 
+            // SS+保底阈值
+            pityThresholdSSPlus: 500, 
+            // SS+保底概率
+            probabilitiesPitySSPlus: { 6: 95, 7: 4.99, 8: 0.01 } 
         };
     },
     computed: {
@@ -139,67 +143,111 @@ export default {
             });
             return counts;
         },
-
         highLevelHistoryItems() {
-            // 直接过滤 drawHistory，保留 level >= 4 的卡片，并反转数组使最新获得的在前面
             return this.drawHistory.filter(card => card.level >= 4).slice().reverse();
         }
     },
     methods: {
-        // --- 核心抽卡逻辑 ---
         performSingleDraw() {
             if (this.isDrawing || !this.validateCardData()) return;
             this.isDrawing = true;
             this.currentDrawType = 1;
-            this.multiDrawHighestLevel = 0; // Reset multi-draw tracker
+            this.multiDrawHighestLevel = 0;
             const startingDrawCount = this.drawCount;
 
             setTimeout(() => {
-                const drawnLevel = this.determineLevelFromProbabilities(this.probabilitiesSingle);
-                const cardToDisplay = this.findCardByLevel(drawnLevel, startingDrawCount + 1);
+                let drawnLevel;
+                let cardToDisplay;
+                const currentDrawNumber = startingDrawCount + 1;
+                let triggeredSSPlusPity = false;
+
+            
+                this.pityCounterSSPlus++; 
+
+                // 检查SS+保底
+                if (this.pityCounterSSPlus >= this.pityThresholdSSPlus) {
+                    drawnLevel = this.determinePitySSPlusLevel(); 
+                    triggeredSSPlusPity = true; 
+                    this.pityCounterSSPlus = 0; // 重置计数器
+                } else {
+                    drawnLevel = this.determineLevelFromProbabilities(this.probabilitiesSingle); // 正常概率
+                    // 如果没触发保底，但抽到了SS+，也要重置计数器
+                    if (drawnLevel >= 6) {
+                        this.pityCounterSSPlus = 0;
+                    }
+                }
+            
+
+                cardToDisplay = this.findCardByLevel(drawnLevel, currentDrawNumber);
 
                 this.drawnCard = cardToDisplay;
                 this.drawHistory.push(this.drawnCard);
-                this.drawCount++; // Increment after successful draw
+                this.drawCount++;
                 this.isDrawing = false;
 
-            }, 1200); // 模拟抽卡延迟
+            }, 1200);
         },
 
         performMultiDraw(count = 5) {
             if (this.isDrawing || !this.validateCardData()) return;
             this.isDrawing = true;
             this.currentDrawType = 5;
-            this.multiDrawHighestLevel = 0; 
+            this.multiDrawHighestLevel = 0;
             const startingDrawCount = this.drawCount;
             const results = [];
             let maxLevelInBatch = 0;
             let hasGuaranteedItem = false;
+            let ssPlusPityJustTriggeredInBatch = false; // 确保一个五连只触发一次硬保底
 
             for (let i = 0; i < count; i++) {
                 const currentDrawNumber = startingDrawCount + i + 1;
-                const drawnLevel = this.determineLevelFromProbabilities(this.probabilitiesMulti);
-                const drawnCard = this.findCardByLevel(drawnLevel, currentDrawNumber);
+                let drawnLevel;
+                let drawnCard;
+                let triggeredSSPlusPityThisDraw = false;
+
+                // SS+ 多抽保底
+                this.pityCounterSSPlus++; // 计数增加
+
+                
+                if (!ssPlusPityJustTriggeredInBatch && this.pityCounterSSPlus >= this.pityThresholdSSPlus) {
+                    drawnLevel = this.determinePitySSPlusLevel(); 
+                    triggeredSSPlusPityThisDraw = true;
+                    ssPlusPityJustTriggeredInBatch = true; 
+                    this.pityCounterSSPlus = 0; 
+                } else {
+                    drawnLevel = this.determineLevelFromProbabilities(this.probabilitiesMulti); 
+                    
+                    if (drawnLevel >= 6) {
+                        this.pityCounterSSPlus = 0;
+                    }
+                }
+            
+
+                drawnCard = this.findCardByLevel(drawnLevel, currentDrawNumber);
                 results.push(drawnCard);
 
                 if (drawnCard.level >= 3) {
-                    hasGuaranteedItem = true; // 检查是否已经抽到了 B 或更高
+                    hasGuaranteedItem = true;
                 }
                 if (drawnCard.level > maxLevelInBatch) {
                     maxLevelInBatch = drawnCard.level;
                 }
             }
 
-            if (!hasGuaranteedItem) {
-                // 如果五次都没有 B 或更高，随机替换其中一个结果
+            
+            if (!hasGuaranteedItem && !ssPlusPityJustTriggeredInBatch) {
                 const replaceIndex = Math.floor(Math.random() * count);
                 const guaranteedLevel = this.determineLevelFromProbabilities(this.probabilitiesGuaranteedBPlus);
-                const originalDrawNumber = results[replaceIndex].drawNumber; 
+                const originalDrawNumber = results[replaceIndex].drawNumber;
                 const guaranteedCard = this.findCardByLevel(guaranteedLevel, originalDrawNumber);
 
-                results[replaceIndex] = guaranteedCard; 
+                // 替换的卡原本是SS+，需要重新调整保底计数器 
+                if (results[replaceIndex].level >= 6 && guaranteedCard.level < 6) {
+                    console.warn("B+保底替换掉了一个SS+卡片，SS+计数器可能未按预期恢复（此情况概率极低）。");
+                }
 
-                // 更新最高等级记录
+                results[replaceIndex] = guaranteedCard;
+
                 if (guaranteedCard.level > maxLevelInBatch) {
                     maxLevelInBatch = guaranteedCard.level;
                 }
@@ -210,17 +258,16 @@ export default {
 
             setTimeout(() => {
                 this.drawnCard = cardToDisplay;
-                this.drawHistory.push(...results); // 将所有五张卡添加到历史记录
-                this.drawCount += count; // 更新总抽卡次数
-                this.multiDrawHighestLevel = maxLevelInBatch; // 记录本次五连最高等级
+                this.drawHistory.push(...results);
+                this.drawCount += count;
+                this.multiDrawHighestLevel = maxLevelInBatch;
                 this.isDrawing = false;
-            }, 1500); // 五连抽稍微长一点的延迟
+            }, 1500);
         },
 
         validateCardData() {
             if (!this.cardData || this.cardData.length === 0) {
                 console.error("错误：卡池数据 (cardData) 为空或未提供！");
-                
                 this.drawnCard = this.createErrorCard("卡池配置错误", 0, this.drawCount + 1);
                 return false;
             }
@@ -232,7 +279,7 @@ export default {
             let cumulativeProbability = 0;
             const sortedLevels = Object.keys(probabilities)
                 .map(Number)
-                .sort((a, b) => a - b); 
+                .sort((a, b) => a - b);
 
             for (const level of sortedLevels) {
                 const prob = probabilities[level];
@@ -245,11 +292,26 @@ export default {
                     console.warn(`等级 ${level} 的概率配置无效: ${prob}`);
                 }
             }
-
-            
             console.warn("确定抽卡等级时出现问题。可能概率总和略小于100%或随机数异常。返回最低有效等级。");
             const fallbackLevel = sortedLevels.find(level => probabilities[level] > 0 && typeof probabilities[level] === 'number');
-            return fallbackLevel !== undefined ? fallbackLevel : 1; // 默认回退到等级1
+            return fallbackLevel !== undefined ? fallbackLevel : 1;
+        },
+
+        // SS+保底等级
+        determinePitySSPlusLevel() {
+            const random = Math.random() * 100;
+            let cumulativeProbability = 0;
+            const pityLevels = [6, 7, 8]; // 按SS, SSS, SP顺序检查
+            for (const level of pityLevels) {
+                const prob = this.probabilitiesPitySSPlus[level];
+                cumulativeProbability += prob;
+                if (random <= cumulativeProbability) {
+                    return level;
+                }
+            }
+            // 回退
+            console.warn("SS+保底概率计算回退");
+            return 6; // 默认返回SS
         },
 
         findCardByLevel(level, drawNumber) {
@@ -264,11 +326,10 @@ export default {
                     drawNumber: drawNumber
                 };
             } else {
-                
                 console.warn(`警告：在卡池数据中找不到等级 ${level} 的卡片。`);
                 card = this.createErrorCard(
                     `未找到等级 ${this.getCardLevelLabel(level)} 卡片`,
-                    level, // 仍然使用目标level，但标记为错误
+                    level,
                     drawNumber
                 );
             }
@@ -279,7 +340,7 @@ export default {
             return {
                 name: "虚空回响",
                 text: message,
-                level: level, // 可以设为 0 或保持原 level 以供调试
+                level: level,
                 card: "错误",
                 uniqueId: this.uniqueCounter++,
                 drawNumber: drawNumber
@@ -293,7 +354,7 @@ export default {
         getCardLevelClass(level) {
             const numericLevel = Number(level);
             if (isNaN(numericLevel) || numericLevel < 0 || numericLevel > 8) {
-                return 'level-0'; // 统一处理无效/错误等级
+                return 'level-0';
             }
             return `level-${numericLevel}`;
         }
@@ -302,18 +363,17 @@ export default {
 </script>
 
 <style>
-
+/* Global styles (body, etc.) - Keep as is */
 body {
     margin: 0;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    /* 淡灰色背景 */
 }
 </style>
 
 <style scoped>
-
+/* All scoped styles from the original code - Keep as is */
 
 .draw-controls {
     display: flex;
