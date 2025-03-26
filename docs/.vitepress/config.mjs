@@ -32,6 +32,7 @@ export default defineConfig({
           items: [
             { text: "介绍", link: "/wiki/start" },
             { text: "信仰测试", link: "/wiki/test" },
+            { text: "虚空祈求", link: "/wiki/pray" },
           ],
         },
 

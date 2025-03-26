@@ -5,6 +5,7 @@ import "./custom.css";
 import MemberBlock from "../../components/MemberBlock.vue";
 import Gallery from "../../components/Gallery.vue";
 import Faction from "../../components/Faction.vue";
+import GachaSimulator from "../../components/GachaSimulator.vue";
 
 /** @type {import('vitepress').Theme} */
 export default {
@@ -14,5 +15,6 @@ export default {
     app.component("MemberBlock", MemberBlock);
     app.component("Gallery", Gallery);
     app.component("Faction", Faction);
+    app.component("GachaSimulator", GachaSimulator);
   }
 }
