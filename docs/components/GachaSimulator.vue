@@ -3,8 +3,14 @@
         <div class="gacha-container">
             <!-- 抽卡控制区域 -->
             <div class="draw-controls">
-                <button class="draw-button" @click="performDraw" :disabled="isDrawing">
-                    <span v-if="!isDrawing">进行祈求</span>
+                <button class="draw-button" @click="performSingleDraw" :disabled="isDrawing">
+                    <span v-if="!isDrawing">进行祈求 (x1)</span>
+                    <span v-else>
+                        <span class="button-spinner"></span> 祈求中...
+                    </span>
+                </button>
+                <button class="draw-button draw-button-multi" @click="performMultiDraw(5)" :disabled="isDrawing">
+                    <span v-if="!isDrawing">进行祈求 (x5)</span>
                     <span v-else>
                         <span class="button-spinner"></span> 祈求中...
                     </span>
@@ -23,8 +29,9 @@
                     <div v-if="isDrawing" key="loading" class="loading-overlay">
                         <div class="spinner"></div>
                         <p>正在沟通虚空...</p>
+                        <p v-if="currentDrawType === 5" class="multi-draw-notice">(五连祈求进行中)</p>
                     </div>
-                    <!-- 抽到的卡片 -->
+                    <!-- 抽到的卡片 (单抽或五连最高) -->
                     <div v-else-if="drawnCard" :key="drawnCard.uniqueId" class="card-display-wrapper">
                         <div class="result-card" :class="getCardLevelClass(drawnCard.level)">
                             <div class="card-shine"></div>
@@ -47,6 +54,15 @@
                 </transition>
             </div>
 
+            <!-- 五连抽结果提示 -->
+            <div v-if="multiDrawHighestLevel > 0 && !isDrawing && currentDrawType === 5" class="multi-draw-summary">
+                本次五连祈求最高获得
+                <span class="card-level-tag history-tag" :class="['tag-' + getCardLevelClass(multiDrawHighestLevel)]">
+                    {{ getCardLevelLabel(multiDrawHighestLevel) }}
+                </span>
+                级别物品!<p> (已展示最高稀有度卡片，其余结果见历史记录)</p>
+            </div>
+
             <!-- 抽卡历史记录区域 -->
             <div v-if="drawHistory.length > 0" class="draw-history-area">
                 <h3 class="history-title">祈求记录</h3>
@@ -64,7 +80,7 @@
 
                 <!-- 高等级卡片列表 -->
                 <div class="high-level-list">
-                    <h4>高稀有度获得列表:</h4>
+                    <h4>高稀有度获得列表 (A级及以上):</h4>
                     <ul v-if="highLevelHistoryItems.length > 0">
                         <li v-for="card in highLevelHistoryItems" :key="card.uniqueId" class="high-level-item"
                             :class="['level-' + card.level]">
@@ -100,8 +116,16 @@ export default {
             drawCount: 0,
             drawHistory: [],
             uniqueCounter: 0,
+            currentDrawType: 1, 
+            multiDrawHighestLevel: 0, 
+            // 单抽概率
             // probabilities: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 100 },
-            probabilities: { 1: 37.4, 2: 32, 3: 16.2, 4: 9.0, 5: 3.54, 6: 1.42, 7: 0.43, 8: 0.01 },
+            probabilitiesSingle: { 1: 37.4, 2: 32, 3: 16.2, 4: 9.0, 5: 3.54, 6: 1.42, 7: 0.43, 8: 0.01 }, 
+            // 五连抽基础概率 
+            probabilitiesMulti: { 1: 44.573, 2: 30, 3: 15, 4: 6, 5: 3, 6: 1.2, 7: 0.22, 8: 0.007 },
+            // 五连抽中的保底概率
+            probabilitiesGuaranteedBPlus: { 3: 75.993, 4: 20, 5: 2, 6: 1.8, 7: 0.2, 8: 0.007 },
+            // 分级
             levelMap: { 0: '?', 1: 'D', 2: 'C', 3: 'B', 4: 'A', 5: 'S', 6: 'SS', 7: 'SSS', 8: 'SP' }
         };
     },
@@ -117,84 +141,159 @@ export default {
         },
 
         highLevelHistoryItems() {
-            // 直接过滤 drawHistory，保留 level >= 4 的卡片
-            return this.drawHistory.filter(card => card.level >= 4);
+            // 直接过滤 drawHistory，保留 level >= 4 的卡片，并反转数组使最新获得的在前面
+            return this.drawHistory.filter(card => card.level >= 4).slice().reverse();
         }
     },
     methods: {
-        performDraw() {
-            if (this.isDrawing || !this.cardData || this.cardData.length === 0) return;
+        // --- 核心抽卡逻辑 ---
+        performSingleDraw() {
+            if (this.isDrawing || !this.validateCardData()) return;
             this.isDrawing = true;
-            this.drawCount++;
+            this.currentDrawType = 1;
+            this.multiDrawHighestLevel = 0; // Reset multi-draw tracker
+            const startingDrawCount = this.drawCount;
 
             setTimeout(() => {
-                const drawnLevel = this.determineDrawLevel();
-                const possibleCards = this.cardData.filter(card => card.level === drawnLevel);
-                let cardToDisplay = null;
-                const currentDrawCount = this.drawCount; // 获取当前的抽卡次数
-
-                if (possibleCards.length > 0) {
-                    const randomIndex = Math.floor(Math.random() * possibleCards.length);
-                    cardToDisplay = {
-                        ...possibleCards[randomIndex],
-                        uniqueId: this.uniqueCounter++,
-                        drawNumber: currentDrawCount
-                    };
-                } else {
-                    console.warn(`警告：在卡池数据中找不到等级 ${drawnLevel} 的卡片。`);
-                    cardToDisplay = {
-                        name: "虚空回响",
-                        text: `无法找到等级 ${this.getCardLevelLabel(drawnLevel)} (${drawnLevel}) 的有效卡片...`,
-                        level: 0, // 使用 level 0 表示错误
-                        card: "错误",
-                        uniqueId: this.uniqueCounter++,
-                        drawNumber: currentDrawCount
-                    };
-                }
+                const drawnLevel = this.determineLevelFromProbabilities(this.probabilitiesSingle);
+                const cardToDisplay = this.findCardByLevel(drawnLevel, startingDrawCount + 1);
 
                 this.drawnCard = cardToDisplay;
-                // 确保即使是错误卡片也被添加到历史记录中
                 this.drawHistory.push(this.drawnCard);
+                this.drawCount++; // Increment after successful draw
                 this.isDrawing = false;
 
             }, 1200); // 模拟抽卡延迟
         },
 
-        determineDrawLevel() {
+        performMultiDraw(count = 5) {
+            if (this.isDrawing || !this.validateCardData()) return;
+            this.isDrawing = true;
+            this.currentDrawType = 5;
+            this.multiDrawHighestLevel = 0; 
+            const startingDrawCount = this.drawCount;
+            const results = [];
+            let maxLevelInBatch = 0;
+            let hasGuaranteedItem = false;
+
+            for (let i = 0; i < count; i++) {
+                const currentDrawNumber = startingDrawCount + i + 1;
+                const drawnLevel = this.determineLevelFromProbabilities(this.probabilitiesMulti);
+                const drawnCard = this.findCardByLevel(drawnLevel, currentDrawNumber);
+                results.push(drawnCard);
+
+                if (drawnCard.level >= 3) {
+                    hasGuaranteedItem = true; // 检查是否已经抽到了 B 或更高
+                }
+                if (drawnCard.level > maxLevelInBatch) {
+                    maxLevelInBatch = drawnCard.level;
+                }
+            }
+
+            if (!hasGuaranteedItem) {
+                // 如果五次都没有 B 或更高，随机替换其中一个结果
+                const replaceIndex = Math.floor(Math.random() * count);
+                const guaranteedLevel = this.determineLevelFromProbabilities(this.probabilitiesGuaranteedBPlus);
+                const originalDrawNumber = results[replaceIndex].drawNumber; 
+                const guaranteedCard = this.findCardByLevel(guaranteedLevel, originalDrawNumber);
+
+                results[replaceIndex] = guaranteedCard; 
+
+                // 更新最高等级记录
+                if (guaranteedCard.level > maxLevelInBatch) {
+                    maxLevelInBatch = guaranteedCard.level;
+                }
+            }
+
+            const highestLevelCards = results.filter(card => card.level === maxLevelInBatch);
+            const cardToDisplay = highestLevelCards[Math.floor(Math.random() * highestLevelCards.length)];
+
+            setTimeout(() => {
+                this.drawnCard = cardToDisplay;
+                this.drawHistory.push(...results); // 将所有五张卡添加到历史记录
+                this.drawCount += count; // 更新总抽卡次数
+                this.multiDrawHighestLevel = maxLevelInBatch; // 记录本次五连最高等级
+                this.isDrawing = false;
+            }, 1500); // 五连抽稍微长一点的延迟
+        },
+
+        validateCardData() {
+            if (!this.cardData || this.cardData.length === 0) {
+                console.error("错误：卡池数据 (cardData) 为空或未提供！");
+                
+                this.drawnCard = this.createErrorCard("卡池配置错误", 0, this.drawCount + 1);
+                return false;
+            }
+            return true;
+        },
+
+        determineLevelFromProbabilities(probabilities) {
             const random = Math.random() * 100;
             let cumulativeProbability = 0;
-            // 按数字顺序迭代等级
-            const sortedLevels = Object.keys(this.probabilities)
+            const sortedLevels = Object.keys(probabilities)
                 .map(Number)
-                .sort((a, b) => a - b);
+                .sort((a, b) => a - b); 
 
             for (const level of sortedLevels) {
-                const prob = this.probabilities[level];
-                // 概率值校验
+                const prob = probabilities[level];
                 if (typeof prob === 'number' && prob > 0) {
                     cumulativeProbability += prob;
                     if (random <= cumulativeProbability) {
                         return level;
                     }
-                } else if (prob !== 0) { // 允许概率为0，但不允许非数字或负数
+                } else if (prob !== 0) {
                     console.warn(`等级 ${level} 的概率配置无效: ${prob}`);
                 }
             }
+
             
-            console.warn("确定抽卡等级时概率总和可能不足100%或随机数异常。返回配置中的最低有效等级。");
-            const fallbackLevel = sortedLevels.find(level => this.probabilities[level] > 0 && typeof this.probabilities[level] === 'number');
-            return fallbackLevel !== undefined ? fallbackLevel : 1; 
+            console.warn("确定抽卡等级时出现问题。可能概率总和略小于100%或随机数异常。返回最低有效等级。");
+            const fallbackLevel = sortedLevels.find(level => probabilities[level] > 0 && typeof probabilities[level] === 'number');
+            return fallbackLevel !== undefined ? fallbackLevel : 1; // 默认回退到等级1
+        },
+
+        findCardByLevel(level, drawNumber) {
+            const possibleCards = this.cardData.filter(card => card.level === level);
+            let card;
+
+            if (possibleCards.length > 0) {
+                const randomIndex = Math.floor(Math.random() * possibleCards.length);
+                card = {
+                    ...possibleCards[randomIndex],
+                    uniqueId: this.uniqueCounter++,
+                    drawNumber: drawNumber
+                };
+            } else {
+                
+                console.warn(`警告：在卡池数据中找不到等级 ${level} 的卡片。`);
+                card = this.createErrorCard(
+                    `未找到等级 ${this.getCardLevelLabel(level)} 卡片`,
+                    level, // 仍然使用目标level，但标记为错误
+                    drawNumber
+                );
+            }
+            return card;
+        },
+
+        createErrorCard(message, level, drawNumber) {
+            return {
+                name: "虚空回响",
+                text: message,
+                level: level, // 可以设为 0 或保持原 level 以供调试
+                card: "错误",
+                uniqueId: this.uniqueCounter++,
+                drawNumber: drawNumber
+            };
         },
 
         getCardLevelLabel(level) {
-            return this.levelMap[level] || '?'; // 处理 level 0 或无效 level
+            return this.levelMap[level] || '?';
         },
 
         getCardLevelClass(level) {
             const numericLevel = Number(level);
-            // 统一返回 0
             if (isNaN(numericLevel) || numericLevel < 0 || numericLevel > 8) {
-                return 'level-0';
+                return 'level-0'; // 统一处理无效/错误等级
             }
             return `level-${numericLevel}`;
         }
@@ -209,11 +308,81 @@ body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    background-color: #f8f9fa;
+    /* 淡灰色背景 */
 }
 </style>
 
 <style scoped>
+
+
+.draw-controls {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 5px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+
+.draw-button {
+    padding: 16px 30px;
+    font-size: 18px;
+    min-width: 160px;
+    text-align: center;
+}
+
+
+.draw-button-multi {
+    background-color: #4895ef;
+}
+
+.draw-button-multi:hover:not(:disabled) {
+    background-color: #3a86e0;
+}
+
+/* 五连抽加载提示 */
+.multi-draw-notice {
+    font-size: 14px;
+    color: #868e96;
+    margin-top: 8px;
+}
+
+/* 五连抽结果 */
+.multi-draw-summary {
+    width: 100%;
+    max-width: 480px;
+    /* 与历史记录区域同宽 */
+    margin-top: -10px;
+    /* 稍微向上移动，靠近卡片 */
+    margin-bottom: 20px;
+    padding: 12px 18px;
+    background-color: #e9ecef;
+    /* 淡灰色背景 */
+    border-radius: 10px;
+    text-align: center;
+    font-size: 14px;
+    color: #495057;
+    border: 1px solid #dee2e6;
+}
+
+.multi-draw-summary .history-tag {
+    vertical-align: baseline;
+    margin: 0 4px;
+
+}
+
+.card-display-area {
+    width: 100%;
+    min-height: 350px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 0;
+    position: relative;
+
+}
+
+
 
 @keyframes gradient-flow {
     0% {
@@ -259,7 +428,6 @@ body {
     }
 }
 
-
 .gacha-simulator-page {
     display: flex;
     justify-content: center;
@@ -277,26 +445,23 @@ body {
     gap: 25px;
 }
 
-.draw-controls {
-    margin-bottom: 5px;
-}
-
 .draw-button {
-    padding: 18px 40px;
+    /*padding: 18px 40px;*/
     border: none;
     border-radius: 16px;
     background-color: #f09819;
     color: #fff;
-    font-size: 20px;
+    /*font-size: 20px;*/
     font-weight: 600;
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
     cursor: pointer;
     transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     outline: none;
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
+    vertical-align: top;
 }
 
 .draw-button:hover:not(:disabled) {
@@ -331,15 +496,7 @@ body {
 .draw-counter {
     color: #6c757d;
     font-size: 15px;
-}
-
-.card-display-area {
-    width: 100%;
-    min-height: 350px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 10px 0;
+    margin-top: 10px;
 }
 
 .loading-overlay {
@@ -368,39 +525,25 @@ body {
     width: 100%;
     max-width: 400px;
     perspective: 1500px;
-
 }
 
 .result-card {
-
     --gradient-border: linear-gradient(110deg, #f1f3f5, #dee2e6, #f1f3f5);
-
     --gradient-opacity: 0.5;
     --gradient-speed: 10s;
     --gradient-thickness: 2px;
-    /* 默认边框厚度 */
     --tag-bg-color: #adb5bd;
-    /* 默认标签背景色 */
     --tag-text-color: #fff;
-    /* 默认标签文字颜色 */
     --shine-opacity: 0;
-
     background-color: #fff;
     color: #555;
-    /* 基础文字颜色 */
     border-radius: 24px;
-    /* 圆角 */
     box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
-    /* 卡片阴影 */
     padding: 35px;
-    /* 内边距 */
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     position: relative;
-    /* 用于定位伪元素和闪光 */
     overflow: hidden;
-    /* 隐藏溢出的闪光和边框 */
     min-height: 290px;
-    /* 最小高度 */
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
@@ -412,7 +555,6 @@ body {
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
 }
 
-/* 卡片流动边框 */
 .result-card::before {
     content: "";
     position: absolute;
@@ -432,7 +574,6 @@ body {
     transition: opacity 0.4s ease;
 }
 
-/* 初始占位卡片 */
 .placeholder-card {
     width: 100%;
     max-width: 400px;
@@ -441,11 +582,9 @@ body {
     padding: 60px 40px;
     text-align: center;
     color: #adb5bd;
-    /* 灰色文字 */
     font-size: 17px;
     line-height: 1.6;
     border: 2px dashed #ced4da;
-    /* 虚线边框 */
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
     box-sizing: border-box;
     display: flex;
@@ -455,7 +594,6 @@ body {
     min-height: 290px;
 }
 
-/* 卡片内部结构 */
 .card-header {
     display: flex;
     justify-content: space-between;
@@ -480,9 +618,7 @@ body {
     padding: 7px 15px;
     border-radius: 15px;
     background: var(--tag-bg-color);
-    /* 使用变量定义背景 */
     color: var(--tag-text-color);
-    /* 使用变量定义文字颜色 */
     text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.15);
     line-height: 1;
     white-space: nowrap;
@@ -492,7 +628,6 @@ body {
     font-size: 24px;
     font-weight: 700;
     color: #343a40;
-    /* 深灰色标题 */
     margin-top: 0;
     margin-bottom: 12px;
     line-height: 1.3;
@@ -521,7 +656,6 @@ body {
 }
 
 .level-0 {
-    /* 错误或未知等级 */
     --tag-bg-color: #6c757d;
     --gradient-border: linear-gradient(110deg, #dee2e6, #adb5bd, #dee2e6);
     --gradient-opacity: 0.4;
@@ -530,7 +664,6 @@ body {
 }
 
 .level-1 {
-    /* D */
     --tag-bg-color: #adb5bd;
     --gradient-border: linear-gradient(110deg, #f8f9fa, #e9ecef, #ced4da, #adb5bd, #ced4da, #e9ecef, #f8f9fa);
     --gradient-opacity: 0.5;
@@ -539,7 +672,6 @@ body {
 }
 
 .level-2 {
-    /* C */
     --tag-bg-color: #52b788;
     --gradient-border: linear-gradient(110deg, #d8f3dc, #b7e4c7, #95d5b2, #74c69d, #52b788, #74c69d, #95d5b2, #b7e4c7, #d8f3dc);
     --gradient-opacity: 0.6;
@@ -548,7 +680,6 @@ body {
 }
 
 .level-3 {
-    /* B */
     --tag-bg-color: #4895ef;
     --gradient-border: linear-gradient(110deg, #caf0f8, #ade8f4, #90e0ef, #48cae4, #00b4d8, #48cae4, #90e0ef, #ade8f4, #caf0f8);
     --gradient-opacity: 0.7;
@@ -557,7 +688,6 @@ body {
 }
 
 .level-4 {
-    /* A */
     --tag-bg-color: #a78bfa;
     --gradient-border: linear-gradient(110deg, #e9d5ff, #d8b4fe, #c084fc, #a855f7, #9333ea, #a855f7, #c084fc, #d8b4fe, #e9d5ff);
     --gradient-opacity: 0.8;
@@ -566,21 +696,17 @@ body {
 }
 
 .level-5 {
-    /* S */
     --tag-bg-color: #ffc107;
     --tag-text-color: #493803;
-    /* S级标签用深色文字 */
     text-shadow: none;
     --gradient-border: linear-gradient(110deg, #fff8e1, #ffecb3, #ffd54f, #ffc107, #ffb300, #ffc107, #ffd54f, #ffecb3, #fff8e1);
     --gradient-opacity: 1;
     --gradient-speed: 4.5s;
     --gradient-thickness: 3px;
     --shine-opacity: 0.3;
-    /* S级及以上增加闪光 */
 }
 
 .level-6 {
-    /* SS */
     --tag-bg-color: #fd7e14;
     --gradient-border: linear-gradient(110deg, #fff3e0, #ffe0b2, #ffb74d, #fd7e14, #f57c00, #e65100, #f57c00, #fd7e14, #ffb74d, #ffe0b2, #fff3e0);
     --gradient-opacity: 1;
@@ -590,7 +716,6 @@ body {
 }
 
 .level-7 {
-    /* SSS */
     --tag-bg-color: linear-gradient(45deg, #e75aa0, #d63384, #b32a72);
     --gradient-border: linear-gradient(110deg, #fce4ec, #f8bbd0, #f06292, #d63384, #c2185b, #ad1457, #c2185b, #d63384, #f06292, #f8bbd0, #fce4ec);
     --gradient-opacity: 1;
@@ -600,27 +725,18 @@ body {
 }
 
 .level-8 {
-    /* SP */
     --gradient-border: linear-gradient(110deg, #ffdd57, #ff964f, #ff7b7b, #f771e1, #b78dff, #7ac7ff, #69f0ae, #a5ff7a, #f4ff6a, #ffdd57);
-    /* 彩虹渐变 */
     --gradient-opacity: 1;
     --gradient-speed: 2.5s;
-    /* 最快速度 */
     --gradient-thickness: 4px;
-    /* 最厚边框 */
     --shine-opacity: 0.55;
-    /* 最强闪光 */
 }
 
-/* SP卡片特殊名字样式 */
 .level-8 .card-name {
     color: #a77c04;
-    /* 金色文字 */
     text-shadow: 0 1px 2px rgba(255, 255, 255, 0.2);
-    /* 白色高光 */
 }
 
-/* 卡片闪光效果 */
 .card-shine {
     content: '';
     position: absolute;
@@ -634,13 +750,10 @@ body {
     opacity: var(--shine-opacity);
     transition: opacity 0.4s ease;
     animation: shine-sweep 3.0s infinite linear;
-    /* 扫光动画 */
     animation-delay: 1s;
-    /* 延迟启动 */
     z-index: 0;
 }
 
-/* 卡片出现/消失过渡 */
 .card-reveal-enter-active {
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -669,7 +782,6 @@ body {
     transform: scale(0.9);
 }
 
-/* 抽卡历史记录区域 */
 .draw-history-area {
     width: 100%;
     max-width: 480px;
@@ -692,7 +804,6 @@ body {
     border-bottom: 1px solid #dee2e6;
 }
 
-/* 低等级统计 */
 .low-level-summary {
     margin-bottom: 25px;
     padding: 15px;
@@ -710,27 +821,20 @@ body {
 
 .low-level-item {
     display: inline-block;
-    /* 横向排列 */
     margin-right: 18px;
-    /* 项目间距 */
     margin-bottom: 8px;
-    /* 行间距 */
     font-size: 14px;
     color: #495057;
     white-space: nowrap;
-    /* 防止换行 */
 }
 
-/* 历史记录中的标签 */
 .history-tag {
     padding: 4px 10px;
-    /* 比卡片上的标签小 */
     font-size: 11px;
     margin-right: 6px;
     vertical-align: middle;
 }
 
-/* 高等级列表 */
 .high-level-list h4 {
     margin-top: 0;
     margin-bottom: 15px;
@@ -743,6 +847,8 @@ body {
     list-style: none;
     padding: 0;
     margin: 0;
+    max-height: 400px;
+    overflow-y: auto;
 }
 
 .high-level-item {
@@ -750,16 +856,12 @@ body {
     align-items: center;
     padding: 10px 5px;
     border-bottom: 1px dashed #e9ecef;
-
     font-size: 14px;
-
     position: relative;
-
 }
 
 .high-level-item:last-child {
     border-bottom: none;
-
 }
 
 .history-card-name {
@@ -770,17 +872,14 @@ body {
     flex-grow: 1;
     overflow: hidden;
     text-overflow: ellipsis;
-    /* 显示省略号 */
     white-space: nowrap;
 }
 
 .history-card-count {
     color: #adb5bd;
-    /* 计数颜色 */
     font-size: 13px;
     white-space: nowrap;
     margin-left: auto;
-
 }
 
 .no-high-level {
@@ -791,7 +890,6 @@ body {
     padding: 10px;
 }
 
-/* 标签等级颜色定义 */
 .tag-level-0 {
     background: #6c757d;
     color: #fff;
@@ -833,9 +931,7 @@ body {
     color: #fff;
 }
 
-
 .tag-level-8 {
-    /* 彩虹渐变 */
     background: var(--gradient-border);
     color: #fff;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
