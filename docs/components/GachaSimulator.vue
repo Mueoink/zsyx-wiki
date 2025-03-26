@@ -66,14 +66,12 @@
                 <div class="high-level-list">
                     <h4>高稀有度获得列表:</h4>
                     <ul v-if="highLevelHistoryItems.length > 0">
-                        <!-- 修改 v-for 和 :key -->
-                        <li v-for="card in highLevelHistoryItems" :key="card.uniqueId" class="high-level-item">
-                            <span class="card-level-tag history-tag" :class="['tag-' + getCardLevelClass(card.level)]"
-                                >
-                                {{ getCardLevelLabel(card.level) }} 
+                        <li v-for="card in highLevelHistoryItems" :key="card.uniqueId" class="high-level-item"
+                            :class="['level-' + card.level]">
+                            <span class="card-level-tag history-tag" :class="['tag-' + getCardLevelClass(card.level)]">
+                                {{ getCardLevelLabel(card.level) }}
                             </span>
-                            <span class="history-card-name">{{ card.name }}</span> 
-                            
+                            <span class="history-card-name">{{ card.name }}</span>
                             <span class="history-card-count">(第 {{ card.drawNumber }} 次祈求)</span>
                         </li>
                     </ul>
@@ -102,12 +100,12 @@ export default {
             drawCount: 0,
             drawHistory: [],
             uniqueCounter: 0,
-            probabilities: { 1: 37.4, 2: 32.5, 3: 16.5, 4: 9.0, 5: 3.54, 6: 1.42, 7: 0.13, 8: 0.001 },
+            // probabilities: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 100 },
+            probabilities: { 1: 37.4, 2: 32, 3: 16.2, 4: 9.0, 5: 3.54, 6: 1.42, 7: 0.43, 8: 0.01 },
             levelMap: { 0: '?', 1: 'D', 2: 'C', 3: 'B', 4: 'A', 5: 'S', 6: 'SS', 7: 'SSS', 8: 'SP' }
         };
     },
     computed: {
-        // 低等级统计保持不变
         lowLevelCounts() {
             const counts = { 1: 0, 2: 0, 3: 0 };
             this.drawHistory.forEach(card => {
@@ -117,10 +115,9 @@ export default {
             });
             return counts;
         },
-        // 修改：高等级历史记录现在直接返回过滤后的卡片对象
+
         highLevelHistoryItems() {
             // 直接过滤 drawHistory，保留 level >= 4 的卡片
-            // 这些卡片对象已经包含了 drawNumber 和 uniqueId
             return this.drawHistory.filter(card => card.level >= 4);
         }
     },
@@ -128,7 +125,7 @@ export default {
         performDraw() {
             if (this.isDrawing || !this.cardData || this.cardData.length === 0) return;
             this.isDrawing = true;
-            this.drawCount++; // 先增加总次数
+            this.drawCount++;
 
             setTimeout(() => {
                 const drawnLevel = this.determineDrawLevel();
@@ -141,57 +138,61 @@ export default {
                     cardToDisplay = {
                         ...possibleCards[randomIndex],
                         uniqueId: this.uniqueCounter++,
-                        drawNumber: currentDrawCount // <-- 存储抽到这张卡时的总次数
+                        drawNumber: currentDrawCount
                     };
                 } else {
                     console.warn(`警告：在卡池数据中找不到等级 ${drawnLevel} 的卡片。`);
                     cardToDisplay = {
                         name: "虚空回响",
                         text: `无法找到等级 ${this.getCardLevelLabel(drawnLevel)} (${drawnLevel}) 的有效卡片...`,
-                        level: 0,
+                        level: 0, // 使用 level 0 表示错误
                         card: "错误",
                         uniqueId: this.uniqueCounter++,
-                        drawNumber: currentDrawCount // <-- 存储抽到这张卡时的总次数
+                        drawNumber: currentDrawCount
                     };
                 }
 
                 this.drawnCard = cardToDisplay;
-                // 推入历史记录的卡片对象现在包含了 drawNumber
+                // 确保即使是错误卡片也被添加到历史记录中
                 this.drawHistory.push(this.drawnCard);
                 this.isDrawing = false;
 
-            }, 1200);
+            }, 1200); // 模拟抽卡延迟
         },
 
         determineDrawLevel() {
             const random = Math.random() * 100;
             let cumulativeProbability = 0;
+            // 按数字顺序迭代等级
             const sortedLevels = Object.keys(this.probabilities)
                 .map(Number)
                 .sort((a, b) => a - b);
 
             for (const level of sortedLevels) {
                 const prob = this.probabilities[level];
+                // 概率值校验
                 if (typeof prob === 'number' && prob > 0) {
                     cumulativeProbability += prob;
                     if (random <= cumulativeProbability) {
                         return level;
                     }
-                } else if (prob !== 0) {
+                } else if (prob !== 0) { // 允许概率为0，但不允许非数字或负数
                     console.warn(`等级 ${level} 的概率配置无效: ${prob}`);
                 }
             }
+            
             console.warn("确定抽卡等级时概率总和可能不足100%或随机数异常。返回配置中的最低有效等级。");
             const fallbackLevel = sortedLevels.find(level => this.probabilities[level] > 0 && typeof this.probabilities[level] === 'number');
-            return fallbackLevel !== undefined ? fallbackLevel : 1;
+            return fallbackLevel !== undefined ? fallbackLevel : 1; 
         },
 
         getCardLevelLabel(level) {
-            return this.levelMap[level] || '?';
+            return this.levelMap[level] || '?'; // 处理 level 0 或无效 level
         },
 
         getCardLevelClass(level) {
             const numericLevel = Number(level);
+            // 统一返回 0
             if (isNaN(numericLevel) || numericLevel < 0 || numericLevel > 8) {
                 return 'level-0';
             }
@@ -257,6 +258,7 @@ body {
         transform: rotate(360deg);
     }
 }
+
 
 .gacha-simulator-page {
     display: flex;
@@ -366,25 +368,39 @@ body {
     width: 100%;
     max-width: 400px;
     perspective: 1500px;
+
 }
 
 .result-card {
+
     --gradient-border: linear-gradient(110deg, #f1f3f5, #dee2e6, #f1f3f5);
+
     --gradient-opacity: 0.5;
     --gradient-speed: 10s;
     --gradient-thickness: 2px;
+    /* 默认边框厚度 */
     --tag-bg-color: #adb5bd;
+    /* 默认标签背景色 */
     --tag-text-color: #fff;
+    /* 默认标签文字颜色 */
     --shine-opacity: 0;
+
     background-color: #fff;
     color: #555;
+    /* 基础文字颜色 */
     border-radius: 24px;
+    /* 圆角 */
     box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
+    /* 卡片阴影 */
     padding: 35px;
+    /* 内边距 */
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     position: relative;
+    /* 用于定位伪元素和闪光 */
     overflow: hidden;
+    /* 隐藏溢出的闪光和边框 */
     min-height: 290px;
+    /* 最小高度 */
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
@@ -396,6 +412,7 @@ body {
     box-shadow: 0 15px 40px rgba(0, 0, 0, 0.12);
 }
 
+/* 卡片流动边框 */
 .result-card::before {
     content: "";
     position: absolute;
@@ -415,6 +432,7 @@ body {
     transition: opacity 0.4s ease;
 }
 
+/* 初始占位卡片 */
 .placeholder-card {
     width: 100%;
     max-width: 400px;
@@ -423,9 +441,11 @@ body {
     padding: 60px 40px;
     text-align: center;
     color: #adb5bd;
+    /* 灰色文字 */
     font-size: 17px;
     line-height: 1.6;
     border: 2px dashed #ced4da;
+    /* 虚线边框 */
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
     box-sizing: border-box;
     display: flex;
@@ -435,6 +455,7 @@ body {
     min-height: 290px;
 }
 
+/* 卡片内部结构 */
 .card-header {
     display: flex;
     justify-content: space-between;
@@ -459,7 +480,9 @@ body {
     padding: 7px 15px;
     border-radius: 15px;
     background: var(--tag-bg-color);
+    /* 使用变量定义背景 */
     color: var(--tag-text-color);
+    /* 使用变量定义文字颜色 */
     text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.15);
     line-height: 1;
     white-space: nowrap;
@@ -469,6 +492,7 @@ body {
     font-size: 24px;
     font-weight: 700;
     color: #343a40;
+    /* 深灰色标题 */
     margin-top: 0;
     margin-bottom: 12px;
     line-height: 1.3;
@@ -497,6 +521,7 @@ body {
 }
 
 .level-0 {
+    /* 错误或未知等级 */
     --tag-bg-color: #6c757d;
     --gradient-border: linear-gradient(110deg, #dee2e6, #adb5bd, #dee2e6);
     --gradient-opacity: 0.4;
@@ -505,6 +530,7 @@ body {
 }
 
 .level-1 {
+    /* D */
     --tag-bg-color: #adb5bd;
     --gradient-border: linear-gradient(110deg, #f8f9fa, #e9ecef, #ced4da, #adb5bd, #ced4da, #e9ecef, #f8f9fa);
     --gradient-opacity: 0.5;
@@ -513,6 +539,7 @@ body {
 }
 
 .level-2 {
+    /* C */
     --tag-bg-color: #52b788;
     --gradient-border: linear-gradient(110deg, #d8f3dc, #b7e4c7, #95d5b2, #74c69d, #52b788, #74c69d, #95d5b2, #b7e4c7, #d8f3dc);
     --gradient-opacity: 0.6;
@@ -521,6 +548,7 @@ body {
 }
 
 .level-3 {
+    /* B */
     --tag-bg-color: #4895ef;
     --gradient-border: linear-gradient(110deg, #caf0f8, #ade8f4, #90e0ef, #48cae4, #00b4d8, #48cae4, #90e0ef, #ade8f4, #caf0f8);
     --gradient-opacity: 0.7;
@@ -529,6 +557,7 @@ body {
 }
 
 .level-4 {
+    /* A */
     --tag-bg-color: #a78bfa;
     --gradient-border: linear-gradient(110deg, #e9d5ff, #d8b4fe, #c084fc, #a855f7, #9333ea, #a855f7, #c084fc, #d8b4fe, #e9d5ff);
     --gradient-opacity: 0.8;
@@ -537,15 +566,21 @@ body {
 }
 
 .level-5 {
+    /* S */
     --tag-bg-color: #ffc107;
+    --tag-text-color: #493803;
+    /* S级标签用深色文字 */
+    text-shadow: none;
     --gradient-border: linear-gradient(110deg, #fff8e1, #ffecb3, #ffd54f, #ffc107, #ffb300, #ffc107, #ffd54f, #ffecb3, #fff8e1);
     --gradient-opacity: 1;
     --gradient-speed: 4.5s;
     --gradient-thickness: 3px;
     --shine-opacity: 0.3;
+    /* S级及以上增加闪光 */
 }
 
 .level-6 {
+    /* SS */
     --tag-bg-color: #fd7e14;
     --gradient-border: linear-gradient(110deg, #fff3e0, #ffe0b2, #ffb74d, #fd7e14, #f57c00, #e65100, #f57c00, #fd7e14, #ffb74d, #ffe0b2, #fff3e0);
     --gradient-opacity: 1;
@@ -555,6 +590,7 @@ body {
 }
 
 .level-7 {
+    /* SSS */
     --tag-bg-color: linear-gradient(45deg, #e75aa0, #d63384, #b32a72);
     --gradient-border: linear-gradient(110deg, #fce4ec, #f8bbd0, #f06292, #d63384, #c2185b, #ad1457, #c2185b, #d63384, #f06292, #f8bbd0, #fce4ec);
     --gradient-opacity: 1;
@@ -564,21 +600,27 @@ body {
 }
 
 .level-8 {
-    --tag-bg-color: linear-gradient(45deg, #fde68a, #fcca46, #fca311);
-    --tag-text-color: #422006;
-    text-shadow: none;
+    /* SP */
     --gradient-border: linear-gradient(110deg, #ffdd57, #ff964f, #ff7b7b, #f771e1, #b78dff, #7ac7ff, #69f0ae, #a5ff7a, #f4ff6a, #ffdd57);
+    /* 彩虹渐变 */
     --gradient-opacity: 1;
     --gradient-speed: 2.5s;
+    /* 最快速度 */
     --gradient-thickness: 4px;
+    /* 最厚边框 */
     --shine-opacity: 0.55;
+    /* 最强闪光 */
 }
 
+/* SP卡片特殊名字样式 */
 .level-8 .card-name {
     color: #a77c04;
+    /* 金色文字 */
     text-shadow: 0 1px 2px rgba(255, 255, 255, 0.2);
+    /* 白色高光 */
 }
 
+/* 卡片闪光效果 */
 .card-shine {
     content: '';
     position: absolute;
@@ -592,10 +634,13 @@ body {
     opacity: var(--shine-opacity);
     transition: opacity 0.4s ease;
     animation: shine-sweep 3.0s infinite linear;
+    /* 扫光动画 */
     animation-delay: 1s;
+    /* 延迟启动 */
     z-index: 0;
 }
 
+/* 卡片出现/消失过渡 */
 .card-reveal-enter-active {
     transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -624,6 +669,7 @@ body {
     transform: scale(0.9);
 }
 
+/* 抽卡历史记录区域 */
 .draw-history-area {
     width: 100%;
     max-width: 480px;
@@ -646,6 +692,7 @@ body {
     border-bottom: 1px solid #dee2e6;
 }
 
+/* 低等级统计 */
 .low-level-summary {
     margin-bottom: 25px;
     padding: 15px;
@@ -663,20 +710,27 @@ body {
 
 .low-level-item {
     display: inline-block;
+    /* 横向排列 */
     margin-right: 18px;
+    /* 项目间距 */
     margin-bottom: 8px;
+    /* 行间距 */
     font-size: 14px;
     color: #495057;
     white-space: nowrap;
+    /* 防止换行 */
 }
 
+/* 历史记录中的标签 */
 .history-tag {
     padding: 4px 10px;
+    /* 比卡片上的标签小 */
     font-size: 11px;
     margin-right: 6px;
     vertical-align: middle;
 }
 
+/* 高等级列表 */
 .high-level-list h4 {
     margin-top: 0;
     margin-bottom: 15px;
@@ -696,11 +750,16 @@ body {
     align-items: center;
     padding: 10px 5px;
     border-bottom: 1px dashed #e9ecef;
+
     font-size: 14px;
+
+    position: relative;
+
 }
 
 .high-level-item:last-child {
     border-bottom: none;
+
 }
 
 .history-card-name {
@@ -711,14 +770,17 @@ body {
     flex-grow: 1;
     overflow: hidden;
     text-overflow: ellipsis;
+    /* 显示省略号 */
     white-space: nowrap;
 }
 
 .history-card-count {
     color: #adb5bd;
+    /* 计数颜色 */
     font-size: 13px;
     white-space: nowrap;
     margin-left: auto;
+
 }
 
 .no-high-level {
@@ -729,6 +791,7 @@ body {
     padding: 10px;
 }
 
+/* 标签等级颜色定义 */
 .tag-level-0 {
     background: #6c757d;
     color: #fff;
@@ -770,9 +833,13 @@ body {
     color: #fff;
 }
 
+
 .tag-level-8 {
-    background: linear-gradient(45deg, #fde68a, #fcca46, #fca311);
-    color: #422006;
-    text-shadow: none;
+    /* 彩虹渐变 */
+    background: var(--gradient-border);
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    background-size: 300% 100%;
+    animation: gradient-flow var(--gradient-speed, 2.5s) linear infinite;
 }
 </style>
