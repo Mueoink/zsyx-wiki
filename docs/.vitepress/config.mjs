@@ -122,6 +122,52 @@ export default defineConfig({
                     },
                   ],
                 },
+                {
+                  text: "混沌",
+                  collapsed: true,
+                  items: [
+                    {
+                      text: "混乱",
+                      link: "/wiki/gods/main/chaos/disarray.md",
+                    },
+                    {
+                      text: "痴愚",
+                      link: "/wiki/gods/main/chaos/imbecility.md",
+                    },
+                    {
+                      text: "沉默",
+                      link: "/wiki/gods/main/chaos/silence.md",
+                    },
+                  ],
+                },
+                {
+                  text: "存在",
+                  collapsed: true,
+                  items: [
+                    {
+                      text: "记忆",
+                      link: "/wiki/gods/main/exist/memory.md",
+                    },
+                    {
+                      text: "时间",
+                      link: "/wiki/gods/main/exist/time.md",
+                    },
+                  ],
+                },
+                {
+                  text: "虚无",
+                  collapsed: true,
+                  items: [
+                    {
+                      text: "欺诈",
+                      link: "/wiki/gods/main/nothingness/fraud.md",
+                    },
+                    {
+                      text: "命运",
+                      link: "/wiki/gods/main/nothingness/fate.md",
+                    },
+                  ],
+                },
               ],
             },
             {
