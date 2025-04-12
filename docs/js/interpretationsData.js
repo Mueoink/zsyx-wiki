@@ -6985,7 +6985,7 @@ export const interpretationData = [
     result:
       "【综合运势 综合】新的开始（诞育）很快就遭遇了挫折或结束（死亡），让你感到无所适从，生活陷入混乱（混乱）。",
   },
-  // ===== 新增组合解读 (Generated Part 8/10) =====
+
   {
     type: "恋爱运势",
     faith: "繁荣-诞育-沉默",
@@ -7056,7 +7056,7 @@ export const interpretationData = [
     result:
       "【生活指引 综合】规律的生活（秩序）被彻底打破（湮灭），你需要时间（时间）来接受现实并慢慢重建。",
   },
-  // ===== 新增组合解读 (Generated Part 9/10) =====
+ 
   {
     type: "人际关系",
     faith: "真理-记忆-腐朽",
