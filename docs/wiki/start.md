@@ -5,7 +5,7 @@
     </a>
 </p>
 
-<h2 align="center">诸神愚戏 WIKI<Badge type="tip">v1.2.6</Badge></h2>
+<h2 align="center">诸神愚戏 WIKI<Badge type="tip">v1.3.0</Badge></h2>
 
 <h3 align="center">基于《诸神愚戏》小说搭建的WIKI网站</h3>
 
@@ -43,7 +43,11 @@
 
 如果你也愿意为本WIKI的完善贡献力量，我们非常欢迎你的加入！
 
+相关参考[如何贡献](../contribution/contribute.md)
+
 **联系邮箱：[mueo@mueoo.com](mailto:mueo@mueoo.com)**
+
+
 
 
 ## 主要贡献
@@ -68,4 +72,3 @@ const members = [
 <VPTeamMembers size="small" :members="members" />
 
 
-WIP.

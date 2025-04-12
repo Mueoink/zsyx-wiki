@@ -33,6 +33,7 @@ export default defineConfig({
             { text: "介绍", link: "/wiki/start" },
             { text: "信仰测试", link: "/wiki/test" },
             { text: "虚空祈求", link: "/wiki/pray" },
+            { text: "信仰回响", link: "/wiki/divination" },
           ],
         },
 
