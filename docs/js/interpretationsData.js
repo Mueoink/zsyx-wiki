@@ -346,8 +346,6 @@ export const interpretationData = [
     result:
       "【恋爱运势 - 欺诈 - 启示】未来需要警惕感情中的“假象”和“陷阱”。看清人和事的本质是关键。也可能暗示需要运用智慧和策略来应对复杂局面。",
   },
-
-  // --- 组合解读 (精选) ---
   {
     type: "恋爱运势",
     faith: "秩序-繁荣-真理",
@@ -14894,7 +14892,8 @@ export const interpretationData = [
     position: "综合",
     result:
       "【事业前程 综合】依靠运气（命运）获得的成功（繁荣）如果不能转化为实力，最终也会因为缺乏核心竞争力而走向衰败（腐朽）。",
-  },
+    },
+  
   {
     type: "生活指引",
     faith: "欺诈-战争-诞育",
@@ -20105,9 +20104,6 @@ export const interpretationData = [
     result:
       "【恋爱运势 综合】一次偶然的激烈争吵（命运、战争）给双方都留下了心理阴影，成为关系中难以磨灭的负面记忆（记忆）。",
   },
-  // ... (Continuing for batches 121 through 200) ...
-
-  // Batch 200
   {
     type: "财运机遇",
     faith: "诞育-死亡-秩序",

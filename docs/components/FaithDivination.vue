@@ -32,7 +32,7 @@
                             </select>
                         </div>
                         <button @click="startDivination" :disabled="!selectedSubject || !selectedUserFaith"
-                            class="action-button primary-button"
+                            class="action-button primary-button full-width-button" 
                             :class="{ 'disabled-button': !selectedSubject || !selectedUserFaith }">
                             开始感应命途
                         </button>
@@ -109,9 +109,15 @@
                             <p>{{ getCombinedInterpretation() }}</p>
                         </div>
 
-                        <button @click="resetDivination" class="action-button restart-button">
-                            再次占卜
-                        </button>
+                        <!-- Action Buttons Container -->
+                        <div class="result-actions">
+                            <button @click="copyForAI" class="action-button ai-interpret-button">
+                                AI 解读
+                            </button>
+                            <button @click="resetDivination" class="action-button restart-button">
+                                再次占卜
+                            </button>
+                        </div>
                     </div>
 
                 </div>
@@ -148,7 +154,7 @@ const availableSubjects = ref([
     '恋爱运势', '事业前程', '生活指引', '人际关系', '财运机遇', '学业考试', '综合运势'
 ]);
 
-
+// --- 状态管理 ---
 const step = ref('input');
 const selectedSubject = ref('');
 const selectedUserFaith = ref('');
@@ -157,7 +163,7 @@ const selectedFaiths = ref({ source: null, flux: null, outlook: null });
 const isSensing = ref(false);
 const sensingTimeoutId = ref(null);
 
-// 计算属性
+// --- 计算属性 ---
 const currentSelectionTarget = computed(() => {
     if (step.value === 'selectSource') return '源点 (Source)';
     if (step.value === 'selectFlux') return '流转 (Flux)';
@@ -179,9 +185,10 @@ const userFaithPath = computed(() => {
             return path;
         }
     }
-    return null; 
+    return null;
 });
 
+// --- 辅助函数 ---
 function shuffleArray(array) {
     let currentIndex = array.length, randomIndex;
     while (currentIndex !== 0) {
@@ -199,31 +206,36 @@ function getRandomElement(array) {
     return array[randomIndex];
 }
 
-// 带权重的随机选择
 function getWeightedRandomElement(itemsWithWeights) {
     if (!itemsWithWeights || itemsWithWeights.length === 0) {
         return null;
     }
-
     const totalWeight = itemsWithWeights.reduce((sum, item) => sum + item.weight, 0);
     if (totalWeight <= 0) {
         return getRandomElement(itemsWithWeights.map(iw => iw.item));
     }
-
     let randomNum = Math.random() * totalWeight;
     let cumulativeWeight = 0;
-
     for (const itemWithWeight of itemsWithWeights) {
         cumulativeWeight += itemWithWeight.weight;
         if (randomNum < cumulativeWeight) {
             return itemWithWeight.item;
         }
     }
-
     return itemsWithWeights[itemsWithWeights.length - 1].item;
 }
 
+function getFaithColor(faithName) {
+    if (!faithName) return '#555';
+    for (const path in faithData) {
+        if (faithData[path].faiths.includes(faithName)) {
+            return faithData[path].color;
+        }
+    }
+    return '#555';
+}
 
+// 核心逻辑
 function generatePathOptions() {
     isSensing.value = true;
     currentPathOptions.value = [];
@@ -232,13 +244,15 @@ function generatePathOptions() {
     sensingTimeoutId.value = setTimeout(() => {
         const pathCount = allPaths.length;
         if (pathCount < 2) {
+            currentPathOptions.value = pathCount === 1 ? [allPaths[0], allPaths[0]] : []; 
             isSensing.value = false;
+            sensingTimeoutId.value = null;
             return;
         }
 
         const baseProbability = 1 / pathCount;
         const userPath = userFaithPath.value;
-        const pathIncrease = 0.05; // 用户信仰对应命途增加 5% 概率
+        const pathIncrease = 0.05; // 增加 5% 概率
         const otherPathDecrease = pathCount > 1 ? pathIncrease / (pathCount - 1) : 0;
 
         let pathWeights = allPaths.map(path => {
@@ -250,54 +264,48 @@ function generatePathOptions() {
                     weight -= otherPathDecrease;
                 }
             }
-
-            return { item: path, weight: Math.max(0.001, weight) };
+            return { item: path, weight: Math.max(0.001, weight) }; 
         });
 
-    
+        
         const currentTotalWeight = pathWeights.reduce((sum, p) => sum + p.weight, 0);
         pathWeights = pathWeights.map(p => ({ ...p, weight: p.weight / currentTotalWeight }));
 
-   
+       
         const firstPath = getWeightedRandomElement(pathWeights);
-        if (!firstPath) {
+        if (!firstPath) { 
             isSensing.value = false;
             return;
         }
 
-
+        
         const remainingPathWeights = pathWeights.filter(p => p.item !== firstPath);
-        if (remainingPathWeights.length === 0) {
-            currentPathOptions.value = [firstPath, firstPath]; 
-            isSensing.value = false;
-            sensingTimeoutId.value = null;
-            return;
-        }
-        const remainingTotalWeight = remainingPathWeights.reduce((sum, p) => sum + p.weight, 0);
-        const normalizedRemainingWeights = remainingPathWeights.map(p => ({ ...p, weight: p.weight / remainingTotalWeight }));
+        let secondPath = null;
+        if (remainingPathWeights.length > 0) {
+            const remainingTotalWeight = remainingPathWeights.reduce((sum, p) => sum + p.weight, 0);
+            
+            const normalizedRemainingWeights = remainingTotalWeight > 0
+                ? remainingPathWeights.map(p => ({ ...p, weight: p.weight / remainingTotalWeight }))
+                : remainingPathWeights; 
 
-        const secondPath = getWeightedRandomElement(normalizedRemainingWeights);
+            secondPath = getWeightedRandomElement(normalizedRemainingWeights);
+        }
+
+        
         if (!secondPath) {
-            currentPathOptions.value = [firstPath, getRandomElement(remainingPathWeights.map(p => p.item))];
-        } else {
-            currentPathOptions.value = shuffleArray([firstPath, secondPath]); 
+           
+            if (allPaths.length === 1) {
+                secondPath = firstPath;
+            } else {
+                const otherPaths = allPaths.filter(p => p !== firstPath);
+                secondPath = getRandomElement(otherPaths) || firstPath; 
+            }
         }
 
-
+        currentPathOptions.value = shuffleArray([firstPath, secondPath]);
         isSensing.value = false;
         sensingTimeoutId.value = null;
-    }, 2800);
-}
-
-
-function getFaithColor(faithName) {
-    if (!faithName) return '#555';
-    for (const path in faithData) {
-        if (faithData[path].faiths.includes(faithName)) {
-            return faithData[path].color;
-        }
-    }
-    return '#555';
+    }, 2800); // 感应时间
 }
 
 function startDivination() {
@@ -313,53 +321,54 @@ function selectPath(chosenPath) {
     if (step.value === 'selectSource') position = 'source';
     else if (step.value === 'selectFlux') position = 'flux';
     else if (step.value === 'selectOutlook') position = 'outlook';
-    else return;
+    else return; 
 
     const faithsInPath = faithData[chosenPath].faiths;
     if (!faithsInPath || faithsInPath.length === 0) {
         console.error(`命途 ${chosenPath} 没有可选择的信仰`);
-        return;
-    }
-
-    let selectedFaith = null;
-    const userFaith = selectedUserFaith.value;
-    const userFaithIsInPath = faithsInPath.includes(userFaith);
-
-    if (userFaithIsInPath && faithsInPath.length > 1) {
-        const faithCount = faithsInPath.length;
-        const baseProbability = 1 / faithCount;
-        const faithIncrease = 0.10; // 用户信仰增加 10% 概率
-        const otherFaithDecrease = faithIncrease / (faithCount - 1);
-
-        let faithWeights = faithsInPath.map(faith => {
-            let weight = baseProbability;
-            if (faith === userFaith) {
-                weight += faithIncrease;
-            } else {
-                weight -= otherFaithDecrease;
-            }
-            return { item: faith, weight: Math.max(0.001, weight) };
-        });
-
-        const totalFaithWeight = faithWeights.reduce((sum, f) => sum + f.weight, 0);
-        faithWeights = faithWeights.map(f => ({ ...f, weight: f.weight / totalFaithWeight }));
-
-        selectedFaith = getWeightedRandomElement(faithWeights);
-
+        selectedFaiths.value[position] = '错误：无信仰'; // Assign an error state
     } else {
-        selectedFaith = getRandomElement(faithsInPath);
+        let selectedFaith = null;
+        const userFaith = selectedUserFaith.value;
+        const userFaithIsInPath = faithsInPath.includes(userFaith);
+
+        
+        if (userFaithIsInPath && faithsInPath.length > 1) {
+            const faithCount = faithsInPath.length;
+            const baseProbability = 1 / faithCount;
+            const faithIncrease = 0.10; // 增加 10% 概率
+            const otherFaithDecrease = faithIncrease / (faithCount - 1);
+
+            let faithWeights = faithsInPath.map(faith => {
+                let weight = baseProbability;
+                if (faith === userFaith) {
+                    weight += faithIncrease;
+                } else {
+                    weight -= otherFaithDecrease;
+                }
+                return { item: faith, weight: Math.max(0.001, weight) }; 
+            });
+
+            
+            const totalFaithWeight = faithWeights.reduce((sum, f) => sum + f.weight, 0);
+            faithWeights = faithWeights.map(f => ({ ...f, weight: f.weight / totalFaithWeight }));
+
+            selectedFaith = getWeightedRandomElement(faithWeights);
+        } else {
+            
+            selectedFaith = getRandomElement(faithsInPath);
+        }
+
+       
+        if (!selectedFaith) {
+            console.error(`无法从命途 ${chosenPath} 中抽取信仰`);
+            selectedFaith = faithsInPath[0]; 
+        }
+        selectedFaiths.value[position] = selectedFaith;
     }
 
 
-    if (!selectedFaith) {
-        console.error(`无法从命途 ${chosenPath} 中抽取信仰`);
-  
-        selectedFaith = faithsInPath[0] || '未知错误';
-    }
-
-    selectedFaiths.value[position] = selectedFaith;
-
-
+   
     let nextStep = '';
     if (position === 'source') nextStep = 'selectFlux';
     else if (position === 'flux') nextStep = 'selectOutlook';
@@ -367,7 +376,7 @@ function selectPath(chosenPath) {
 
     step.value = nextStep;
 
-
+    
     if (nextStep !== 'results') {
         generatePathOptions();
     } else {
@@ -387,7 +396,7 @@ function resetDivination() {
     isSensing.value = false;
 }
 
-// 结果获取
+// 结果获取与格式化
 function getInterpretation(subject, faith, position) {
     if (!subject || !faith || !position || !interpretations.value) {
         return '信息不完整，无法获取解读。';
@@ -397,7 +406,8 @@ function getInterpretation(subject, faith, position) {
         item.faith === faith &&
         item.position === position
     );
-    return found ? found.result : `【${subject}】>【${position}】>【${faith}】\n暂无对应解读，请发挥想象力或等待后续补充！`;
+    // 返回更符合示例的格式
+    return found ? found.result : `【${subject} - ${faith} - ${position}】\n暂无对应解读，请发挥想象力或等待后续补充！`;
 }
 
 function getCombinedInterpretation() {
@@ -415,47 +425,90 @@ function getCombinedInterpretation() {
         item.faith === combinedFaith &&
         item.position === '综合'
     );
+    // 返回更符合示例的格式
     return found ? found.result : `【${subject}】> 组合：【${source}】-【${flux}】-【${outlook}】\n暂无对应组合解读。请尝试结合 源点、流转、启示 的单独解读进行理解，或等待后续补充！`;
+}
+
+// AI解读复制
+async function copyForAI() {
+    const { source, flux, outlook } = selectedFaiths.value;
+    const subject = selectedSubject.value;
+    const userFaith = selectedUserFaith.value;
+
+    if (!subject || !userFaith || !source || !flux || !outlook) {
+        alert('无法生成解读文本：占卜信息不完整。');
+        return;
+    }
+
+    // 获取各部分解读文本
+    const sourceInterpretation = getInterpretation(subject, source, '源点');
+    const fluxInterpretation = getInterpretation(subject, flux, '流转');
+    const outlookInterpretation = getInterpretation(subject, outlook, '启示');
+    const combinedInterpretationText = getCombinedInterpretation(); // 获取包含占位符的文本
+
+    // 构建文本
+    const textToCopy = `占卜主题： ${subject}
+你的信仰： ${userFaith}
+
+【源点 Source】
+${source}
+${sourceInterpretation}
+
+【流转 Flux】
+${flux}
+${fluxInterpretation}
+
+【启示 Outlook】
+${outlook}
+${outlookInterpretation}
+
+综合解读：
+${combinedInterpretationText}
+
+这是我的占卜情况，请你完整阅读后做出综合解读。`;
+
+    try {
+        await navigator.clipboard.writeText(textToCopy);
+        alert('复制成功，发送给任意AI即可进行解读');
+    } catch (err) {
+        console.error('无法复制到剪贴板:', err);
+        // 提供一个备选方案，虽然体验稍差
+        prompt('自动复制失败，请手动复制以下内容：', textToCopy);
+    }
 }
 
 </script>
 
 <style scoped>
+
 .divination-page {
     display: flex;
     justify-content: center;
     align-items: flex-start;
     padding: 15px;
     font-family: 'Noto Sans SC', 'Helvetica Neue', Arial, sans-serif;
-    /*  min-height: 100vh; */
     box-sizing: border-box;
 }
 
 .divination-container {
     width: 100%;
     max-width: 800px;
-    /* 保持最大宽度 */
 }
 
 .main-title {
     text-align: center;
     color: #4a4a4a;
     margin-bottom: 1.5rem;
-    /* 稍微减少底部边距 */
     font-size: 2.0em;
-    /* 稍微减小字体 */
     font-weight: 600;
     letter-spacing: 1px;
 }
 
-/* --- 卡片样式 --- */
 .divination-card {
     background-color: #fff;
     border-radius: 15px;
-    /* 稍微减小圆角 */
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
     padding: 25px 20px;
-    /* 减少内边距 */
     margin-bottom: 10px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     position: relative;
@@ -510,7 +563,6 @@ function getCombinedInterpretation() {
 .step-title,
 .result-main-title {
     font-size: 20px;
-    /* 减小字体 */
     font-weight: 700;
     color: #333;
     line-height: 1.3;
@@ -533,10 +585,8 @@ function getCombinedInterpretation() {
     font-style: italic;
 }
 
-
 .form-group {
     margin-bottom: 18px;
-    /* 减少边距 */
 }
 
 .form-group label {
@@ -562,6 +612,8 @@ function getCombinedInterpretation() {
     background-size: 0.9em;
     cursor: pointer;
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    box-sizing: border-box;
+  
 }
 
 .select-input:focus {
@@ -583,16 +635,28 @@ function getCombinedInterpretation() {
     border: 1px solid #e0e0e0;
     background-color: #fff;
     color: #c08497;
+    /* Default pinkish color */
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
-    display: block;
-    width: 100%;
     text-align: center;
     box-sizing: border-box;
 }
 
+/* Ensure buttons in step 1 and path options take full width */
+.full-width-button {
+    display: block;
+    width: 100%;
+}
+
+.path-options-grid .option-button {
+    display: block;
+    width: 100%;
+}
+
+
 .action-button:hover:not(.disabled-button),
 .option-button:hover {
     background-color: #f4acb7;
+ 
     color: #fff;
     box-shadow: 0 5px 12px rgba(0, 0, 0, 0.08);
     transform: translateY(-2px);
@@ -608,6 +672,7 @@ function getCombinedInterpretation() {
 .primary-button {
     margin-top: 20px;
     background-color: #ad7a99;
+
     color: #fff;
     border: none;
 }
@@ -618,41 +683,15 @@ function getCombinedInterpretation() {
     box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
 }
 
-.restart-button {
-    margin-top: 25px;
-    padding: 14px 28px;
-    font-size: 16px;
-    background-color: #8d6e97;
-    color: #fff;
-    border: none;
-    width: fit-content;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.restart-button:hover {
-    background-color: #7b5e87;
-    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
-    border: none;
-}
-
 .disabled-button {
-    background-color: #f0f0f0;
-    color: #bbb;
-    cursor: not-allowed;
-    border-color: #e0e0e0;
-    box-shadow: none;
+    background-color: #f0f0f0 !important;
+    color: #bbb !important;
+    cursor: not-allowed !important;
+    border-color: #e0e0e0 !important;
+    box-shadow: none !important;
+    transform: none !important;
 }
 
-.disabled-button:hover {
-    background-color: #f0f0f0;
-    color: #bbb;
-    transform: none;
-    box-shadow: none;
-    border-color: #e0e0e0;
-}
-
-/* 命途选择网格 */
 .path-options-grid.two-options {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -676,25 +715,20 @@ function getCombinedInterpretation() {
     align-items: center;
     justify-content: center;
     min-height: 180px;
-  
     padding: 1.5rem;
     text-align: center;
     color: #777;
     font-size: 15px;
-    /* 减小字体 */
 }
 
 .spinner {
     border: 4px solid rgba(173, 122, 153, 0.2);
-
     border-left-color: #ad7a99;
     border-radius: 50%;
     width: 40px;
-
     height: 40px;
     animation: spin 1.2s linear infinite;
     margin-bottom: 1rem;
-
 }
 
 @keyframes spin {
@@ -790,13 +824,58 @@ function getCombinedInterpretation() {
 .final-interpretation {
     margin-top: 25px;
     border-left: 4px solid #b39ddb;
-    /* 减小边框 */
     background-color: #f7f5fa;
     padding: 15px;
 }
 
 .final-interpretation p:first-child {
     margin-bottom: 8px;
+}
+
+
+.result-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 30px;
+    flex-wrap: wrap;
+}
+
+
+.result-actions .action-button {
+    width: auto;
+    min-width: 120px;
+    flex-grow: 0;
+}
+
+/* AI解读按钮样式  */
+.ai-interpret-button {
+    background-color: #a6c1ee;
+    color: #fff;
+    border: none;
+}
+
+.ai-interpret-button:hover {
+    background-color: #8caad8;
+    color: #fff;
+    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+    border: none;
+}
+
+/* 再次占卜按钮 */
+.restart-button {
+    background-color: #8d6e97;
+    color: #fff;
+    border: none;
+    margin-top: 0;
+}
+
+.restart-button:hover {
+    background-color: #7b5e87;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+    border: none;
 }
 
 
@@ -811,19 +890,7 @@ function getCombinedInterpretation() {
     opacity: 0;
 }
 
-.fade-list-move,
-.fade-list-enter-active,
-.fade-list-leave-active {
-    transition: all 0.5s ease;
-}
-
-.fade-list-enter-from,
-.fade-list-leave-to {
-    opacity: 0;
-    transform: translateY(15px);
-}
-
-/* 移动端响应式 */
+/* --- 移动端响应式 --- */
 @media (max-width: 600px) {
     .divination-page {
         padding: 10px;
@@ -857,64 +924,66 @@ function getCombinedInterpretation() {
     .select-input {
         padding: 10px 12px;
         font-size: 14px;
-       
     }
 
     .action-button,
     .option-button {
         padding: 12px 18px;
-        
         font-size: 14px;
-      
         border-radius: 8px;
-    }
-
-    .restart-button {
-        padding: 12px 24px;
-        font-size: 15px;
     }
 
     .path-options-grid.two-options {
         grid-template-columns: 1fr;
-    
+        /* 移动端堆叠 */
         gap: 10px;
-     
     }
 
     .path-card {
         padding: 15px;
-      
     }
 
     .path-name {
         font-size: 16px;
-        
     }
 
     .results-summary p {
         font-size: 13px;
-      
     }
 
     .result-item {
         padding: 12px;
-       
         margin-bottom: 15px;
     }
 
     .result-faith {
         font-size: 20px;
-      
     }
 
     .result-placeholder {
         font-size: 13px;
-       
         padding: 10px;
     }
 
     .final-interpretation {
         padding: 12px;
+    }
+
+    /* 调整结果按钮布局 */
+    .result-actions {
+        flex-direction: column;
+        /* 垂直堆叠按钮 */
+        gap: 10px;
+    }
+
+    .result-actions .action-button {
+        width: 100%;
+        /* 移动端按钮占满宽度 */
+        min-width: unset;
+        /* 取消最小宽度 */
+        margin-left: 0;
+        /* 取消居中 */
+        margin-right: 0;
     }
 }
 </style>
