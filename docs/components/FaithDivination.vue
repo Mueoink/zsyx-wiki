@@ -427,7 +427,7 @@ function getCombinedInterpretation() {
     align-items: flex-start;
     padding: 15px;
     font-family: 'Noto Sans SC', 'Helvetica Neue', Arial, sans-serif;
-    min-height: 100vh;
+    /*  min-height: 100vh; */
     box-sizing: border-box;
 }
 
@@ -456,7 +456,7 @@ function getCombinedInterpretation() {
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
     padding: 25px 20px;
     /* 减少内边距 */
-    margin-bottom: 20px;
+    margin-bottom: 10px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     position: relative;
     border: 1px solid #e8e8e8;
