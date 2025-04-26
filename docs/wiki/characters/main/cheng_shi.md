@@ -19,6 +19,22 @@ const teamMembers = [
     avatar: 'https://q1.qlogo.cn/g?b=qq&nk=3593479598&s=640',
     text: '琥珀',
   },
+    {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=2442544519&s=640",
+    text: "初压",
+  },
+    {
+    avatar: 'https://q1.qlogo.cn/g?b=qq&nk=3835227971&s=640',
+    text: 'Mars',
+  },
+    {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=3079265589&s=640",
+    text: "1",
+  },
+  {
+    avatar: 'https://q1.qlogo.cn/g?b=qq&nk=410757752&s=640',
+    text: 'Mueo',
+  },
 ];
 
 const galleryImages = [
@@ -35,7 +51,21 @@ const galleryImages = [
 
 **性别：** 男
 
-**身份：** 命运的宠儿，欺诈的藏品，死亡的打工仔，混乱令使，虚无行者
+**身份：** 
+
+命运的宠儿
+
+欺诈的藏品
+
+死亡的打工仔
+
+【混乱】令使【奥特曼】
+
+【欺诈】令使【愚戏】
+
+【时间】令使【时针】
+
+【秩序】令使
 
 **信仰：** 欺诈(融合命运/混乱/时间)
 
@@ -53,11 +83,11 @@ const galleryImages = [
 
 ## 角色面版
 
-`截止至733章`
+`截止至868章`
 
-【登神之路：2242，全球排名：358761】
+【登神之路： 2261，全球排名： 340391】
 
-【觐见之梯：181，命途排名：31】
+【觐见之梯： 184， 命途排名： 34】
 
 ### 信仰天赋
 
@@ -114,6 +144,17 @@ const galleryImages = [
 [**荆棘泣礼(SS)**](/wiki/assets/props.html#荆棘泣礼-ss)  
 【欢欲之门】的信物：破碎系带(SS)  
 [**命运之骰-既定(S)**](/wiki/assets/props.html#命运之骰-既定-s)  
+【神性容器】
+窥密之耳(S)
+坚守假面(S)
+变化假面(S)
+命定假面(S)
+偷渡假面(S)
+自欺假面(S)
+见证假面(S)
+遗忘假面(S)
+羡慕假面(S)
+惊喜假面(S)
 夜幕春哨(S)  
 惊疑假面(S)  
 希望假面(S)  

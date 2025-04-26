@@ -16,7 +16,7 @@ const teamMembers = [
     avatar: 'https://q1.qlogo.cn/g?b=qq&nk=3835227971&s=640',
     text: 'Mars',
   },
-    {
+  {
     avatar: 'https://q1.qlogo.cn/g?b=qq&nk=410757752&s=640',
     text: 'Mueo',
   },
