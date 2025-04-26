@@ -118,6 +118,10 @@ export default defineConfig({
                       link: "/wiki/gods/main/civilized/order.md",
                     },
                     {
+                      text: "真理",
+                      link: "/wiki/gods/main/civilized/truth.md",
+                    },
+                    {
                       text: "战争",
                       link: "/wiki/gods/main/civilized/war.md",
                     },
