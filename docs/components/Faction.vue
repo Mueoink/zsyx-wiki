@@ -220,7 +220,7 @@ export default {
                 conflictRatio = numberOfConflicts / totalStrongTags;
             }
 
-            const scalingFactor = 1.4; // 可信度系数，防止过低
+            const scalingFactor = 1.6; // 可信度系数，防止过低，越高越低
             this.credibilityScore = Math.round(100 * Math.max(0, 1 - conflictRatio * scalingFactor));
             this.credibilityRating = this.getCredibilityRating(this.credibilityScore);
         },
