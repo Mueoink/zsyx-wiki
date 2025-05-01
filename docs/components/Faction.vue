@@ -23,8 +23,21 @@
                 <h2 class="result-faction-title">你更适合作为<span class="faction-name">【{{ topFaction
                         }}】{{ topFactionBranch }}</span> 的信徒</h2>
                 <p class="result-faction-second">当然，如果你不愿意，也可以试试<span class="faction-name">【{{
-                    secondFaction }}】{{ secondFactionBranch }}</span>
+                        secondFaction }}】{{ secondFactionBranch }}</span>
                 </p>
+                <div class="credibility-section">
+                    <h3 class="chart-title">测试结果可信度</h3>
+                    <div class="credibility-rating" :class="credibilityRatingClass">{{ credibilityRating }} ({{
+                        credibilityScore }}/100)</div>
+                    <p class="credibility-explanation" v-if="credibilityScore < 25">啊哦,看样子你浪费了一段时间。</p>
+                    <p class="credibility-explanation" v-else-if="credibilityScore < 60">准确度不高哦，请遵从本心哦
+                    </p>
+                    <p class="credibility-explanation" v-else-if="credibilityScore < 76">内心可能存在一些矛盾或摇摆哦
+                    </p>
+                    <p class="credibility-explanation" v-else-if="credibilityScore <= 90">已经很准确啦！
+                    </p>
+                    <p class="credibility-explanation" v-else-if="credibilityScore >= 91 ">如此完美的答卷！</p>
+                </div>
                 <div class="result-description">
                     <p> 测试并非权威,结果仅供参考 </p>
 
@@ -35,7 +48,7 @@
                                 <div v-for="(factionData, index) in mainFactionPreferenceData" :key="index"
                                     class="chart-bar-item">
                                     <span class="bar-label">{{ factionData.name }} ({{ factionData.percentage
-                                    }}%)</span>
+                                        }}%)</span>
                                     <div class="bar-container">
                                         <div class="bar"
                                             :class="{ positive: factionData.score >= 0, negative: factionData.score < 0 }"
@@ -82,10 +95,13 @@ export default {
             currentQuestionIndex: 0,
             factionScores: {},
             initialFactionScores: {},
+            userAnswers: {},
             topFaction: null,
             secondFaction: null,
             topFactionBranch: null,
             secondFactionBranch: null,
+            credibilityScore: 100,
+            credibilityRating: '完全可信',
             factions: ['生命', '沉沦', '文明', '混沌', '存在', '虚无'],
             factionBranches: {
                 '生命': ['诞育', '繁荣', '死亡'],
@@ -103,15 +119,51 @@ export default {
                 '存在': '虚无',
                 '虚无': '存在',
             },
+            conflictPairs: [
+                ['STRONG_秩序', 'STRONG_混乱'], ['STRONG_秩序', 'STRONG_痴愚'], ['STRONG_秩序', 'STRONG_沉沦'], ['STRONG_秩序', 'OPPOSE_秩序'],
+                ['STRONG_文明', 'STRONG_混乱'], ['STRONG_文明', 'STRONG_沉沦'], ['STRONG_文明', 'STRONG_虚无'], ['STRONG_文明', 'STRONG_湮灭'], ['STRONG_文明', 'OPPOSE_文明'],
+                ['STRONG_混乱', 'STRONG_秩序'], ['STRONG_混乱', 'STRONG_真理'], ['STRONG_混乱', 'OPPOSE_混乱'],
+                ['STRONG_混沌', 'STRONG_秩序'], ['STRONG_混沌', 'STRONG_文明'], ['STRONG_混沌', 'OPPOSE_混沌'],
+                ['STRONG_生命', 'STRONG_沉沦'], ['STRONG_生命', 'STRONG_湮灭'], ['STRONG_生命', 'STRONG_死亡'], ['STRONG_生命', 'STRONG_腐朽'], ['STRONG_生命', 'STRONG_沉默'], ['STRONG_生命', 'STRONG_虚无'], ['STRONG_生命', 'OPPOSE_生命'],
+                ['STRONG_繁荣', 'STRONG_湮灭'], ['STRONG_繁荣', 'STRONG_死亡'], ['STRONG_繁荣', 'STRONG_腐朽'], ['STRONG_繁荣', 'STRONG_沉默'], ['STRONG_繁荣', 'OPPOSE_繁荣'],
+                ['STRONG_诞育', 'STRONG_湮灭'], ['STRONG_诞育', 'STRONG_死亡'], ['STRONG_诞育', 'STRONG_腐朽'], ['STRONG_诞育', 'OPPOSE_诞育'],
+                ['STRONG_沉沦', 'STRONG_繁荣'], ['STRONG_沉沦', 'STRONG_秩序'], ['STRONG_沉沦', 'OPPOSE_沉沦'],
+                ['STRONG_湮灭', 'STRONG_繁荣'], ['STRONG_湮灭', 'STRONG_诞育'], ['STRONG_湮灭', 'STRONG_秩序'], ['STRONG_湮灭', 'STRONG_存在'], ['STRONG_湮灭', 'OPPOSE_湮灭'],
+                ['STRONG_真理', 'STRONG_欺诈'], ['STRONG_真理', 'STRONG_混乱'], ['STRONG_真理', 'STRONG_痴愚'], ['STRONG_真理', 'STRONG_虚无'], ['STRONG_真理', 'OPPOSE_真理'],
+                ['STRONG_欺诈', 'STRONG_秩序'], ['STRONG_欺诈', 'STRONG_真理'], ['STRONG_欺诈', 'OPPOSE_欺诈'],
+                ['STRONG_存在', 'STRONG_虚无'], ['STRONG_存在', 'STRONG_湮灭'], ['STRONG_存在', 'STRONG_沉默'], ['STRONG_存在', 'OPPOSE_存在'],
+                ['STRONG_虚无', 'STRONG_秩序'], ['STRONG_虚无', 'STRONG_繁荣'], ['STRONG_虚无', 'STRONG_存在'], ['STRONG_虚无', 'OPPOSE_虚无'],
+                ['STRONG_记忆', 'STRONG_湮灭'], ['STRONG_记忆', 'STRONG_沉默'], ['STRONG_记忆', 'OPPOSE_记忆'],
+                ['STRONG_时间', 'STRONG_湮灭'], ['STRONG_时间', 'OPPOSE_时间'],
+                ['STRONG_沉默', 'STRONG_繁荣'], ['STRONG_沉默', 'STRONG_诞育'], ['STRONG_沉默', 'STRONG_秩序'], ['STRONG_沉默', 'OPPOSE_沉默'],
+                ['STRONG_死亡', 'STRONG_繁荣'], ['STRONG_死亡', 'STRONG_诞育'], ['STRONG_死亡', 'OPPOSE_死亡'],
+                ['OPPOSE_秩序', 'STRONG_秩序'], ['OPPOSE_混乱', 'STRONG_混乱'], ['OPPOSE_文明', 'STRONG_文明'], ['OPPOSE_混沌', 'STRONG_混沌'], ['OPPOSE_生命', 'STRONG_生命'],
+                ['OPPOSE_沉沦', 'STRONG_沉沦'], ['OPPOSE_存在', 'STRONG_存在'], ['OPPOSE_虚无', 'STRONG_虚无'], ['OPPOSE_真理', 'STRONG_真理'], ['OPPOSE_欺诈', 'STRONG_欺诈'],
+                ['OPPOSE_繁荣', 'STRONG_繁荣'], ['OPPOSE_诞育', 'STRONG_诞育'], ['OPPOSE_湮灭', 'STRONG_湮灭'], ['OPPOSE_腐朽', 'STRONG_腐朽'], ['OPPOSE_记忆', 'STRONG_记忆'],
+                ['OPPOSE_时间', 'STRONG_时间'], ['OPPOSE_沉默', 'STRONG_沉默'], ['OPPOSE_死亡', 'STRONG_死亡'], ['OPPOSE_痴愚', 'STRONG_痴愚'],
+            ],
             mainFactionPreferenceData: [],
             branchFactionPreferenceData: [],
         };
+    },
+    computed: {
+        credibilityRatingClass() {
+            if (this.credibilityScore <= 10) return 'rating-unreliable';
+            if (this.credibilityScore <= 25) return 'rating-low';
+            if (this.credibilityScore <= 40) return 'rating-lower';
+            if (this.credibilityScore <= 60) return 'rating-average';
+            if (this.credibilityScore <= 75) return 'rating-higher';
+            if (this.credibilityScore <= 90) return 'rating-high';
+            return 'rating-perfect';
+        }
     },
     mounted() {
         this.initializeFactionScores();
     },
     methods: {
         initializeFactionScores() {
+            this.initialFactionScores = {};
+            this.factionScores = {};
             this.factions.forEach((faction) => {
                 this.initialFactionScores[faction] = 0;
             });
@@ -121,31 +173,96 @@ export default {
                 });
             }
         },
+
         selectOption(optionText, optionIndex) {
-            const currentQuestion = this.questions[this.currentQuestionIndex];
-            const selectedOptionScores = currentQuestion.scores[optionIndex];
-
-            if (selectedOptionScores) {
-                for (const factionOrBranch in selectedOptionScores) {
-                    const score = selectedOptionScores[factionOrBranch];
-                    if (this.factions.includes(factionOrBranch)) {
-                        this.initialFactionScores[factionOrBranch] = (this.initialFactionScores[factionOrBranch] || 0) + score;
-                    }
-                    else if (this.factionBranches[Object.keys(this.factionBranches).find(key => this.factionBranches[key].includes(factionOrBranch))]) {
-                        this.factionScores[factionOrBranch] = (this.factionScores[factionOrBranch] || 0) + score;
-                    }
-                }
-            }
-
+            this.userAnswers[this.currentQuestionIndex] = optionIndex;
             this.currentQuestionIndex++;
-
             if (this.currentQuestionIndex === this.questions.length) {
                 this.calculateResults();
             }
         },
-        calculateResults() {
-            const mainFactionTotalScores = {};
 
+        calculateCredibility() {
+            let collectedTags = new Set();
+            let totalStrongTags = 0;
+
+            for (let i = 0; i < this.questions.length; i++) {
+                const answerIndex = this.userAnswers[i];
+                if (answerIndex !== undefined && this.questions[i]?.credibilityTags?.[answerIndex]) {
+                    this.questions[i].credibilityTags[answerIndex].forEach(tag => {
+                        if (tag.startsWith('STRONG_') || tag.startsWith('OPPOSE_')) {
+                            collectedTags.add(tag);
+                            totalStrongTags++;
+                        }
+                    });
+                }
+            }
+
+            let numberOfConflicts = 0;
+            const checkedPairs = new Set();
+
+            this.conflictPairs.forEach(pair => {
+                const tag1 = pair[0];
+                const tag2 = pair[1];
+                const pairKey1 = `${tag1}-${tag2}`;
+                const pairKey2 = `${tag2}-${tag1}`;
+
+                if (!checkedPairs.has(pairKey1) && !checkedPairs.has(pairKey2)) {
+                    if (collectedTags.has(tag1) && collectedTags.has(tag2)) {
+                        numberOfConflicts++;
+                    }
+                    checkedPairs.add(pairKey1);
+                }
+            });
+
+            let conflictRatio = 0;
+            if (totalStrongTags > 0) {
+                conflictRatio = numberOfConflicts / totalStrongTags;
+            }
+
+            const scalingFactor = 1.4; // 可信度系数，防止过低
+            this.credibilityScore = Math.round(100 * Math.max(0, 1 - conflictRatio * scalingFactor));
+            this.credibilityRating = this.getCredibilityRating(this.credibilityScore);
+        },
+
+        getCredibilityRating(score) {
+            if (score <= 10) return '不可信';
+            if (score <= 25) return '低';
+            if (score <= 40) return '较低';
+            if (score <= 60) return '一般';
+            if (score <= 75) return '较高';
+            if (score <= 90) return '高';
+            return '完全可信';
+        },
+
+
+        calculateResults() {
+            this.initializeFactionScores();
+
+            for (let i = 0; i < this.questions.length; i++) {
+                const optionIndex = this.userAnswers[i];
+                if (optionIndex !== undefined) {
+                    const currentQuestion = this.questions[i];
+                    const selectedOptionScores = currentQuestion.scores[optionIndex];
+
+                    if (selectedOptionScores) {
+                        for (const factionOrBranch in selectedOptionScores) {
+                            const score = selectedOptionScores[factionOrBranch];
+                            if (this.factions.includes(factionOrBranch)) {
+                                this.initialFactionScores[factionOrBranch] = (this.initialFactionScores[factionOrBranch] || 0) + score;
+                            } else {
+                                let mainFaction = Object.keys(this.factionBranches).find(key => this.factionBranches[key].includes(factionOrBranch));
+                                if (mainFaction) {
+                                    this.factionScores[factionOrBranch] = (this.factionScores[factionOrBranch] || 0) + score;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+
+            const mainFactionTotalScores = {};
             for (const factionName of this.factions) {
                 let totalBranchInitialScore = 0;
                 let branchCount = 0;
@@ -156,19 +273,16 @@ export default {
                     });
                 }
                 const averageBranchScore = branchCount > 0 ? totalBranchInitialScore / branchCount : 0;
-
                 const mainFactionInitialScore = this.initialFactionScores[factionName] || 0;
                 const opposingMainFactionName = this.opposingFactions[factionName];
                 const opposingMainFactionInitialScore = this.initialFactionScores[opposingMainFactionName] || 0;
-
-                mainFactionTotalScores[factionName] = (mainFactionInitialScore * 0.75) + (averageBranchScore * 0.5) - (opposingMainFactionInitialScore * 0.4);
+                mainFactionTotalScores[factionName] = (mainFactionInitialScore * 0.7) + (averageBranchScore * 0.5) - (opposingMainFactionInitialScore * 0.35);
             }
 
 
             let topFactionName = null;
             let maxMainFactionScore = -Infinity;
             let sortedMainFactions = [];
-
             for (const faction in mainFactionTotalScores) {
                 sortedMainFactions.push({ name: faction, score: mainFactionTotalScores[faction] });
                 if (mainFactionTotalScores[faction] > maxMainFactionScore) {
@@ -177,7 +291,6 @@ export default {
                 }
             }
             sortedMainFactions.sort((a, b) => b.score - a.score);
-
             this.topFaction = topFactionName || '未知信仰';
 
             let topBranchName = null;
@@ -191,7 +304,12 @@ export default {
                     }
                 });
             }
-            this.topFactionBranch = topBranchName || '无分支';
+           
+            if (maxBranchInitialScore <= 0) {
+                this.topFactionBranch = '核心';
+            } else {
+                this.topFactionBranch = topBranchName || '核心'; 
+            }
 
 
             const finalBranchScoresForSecondary = {};
@@ -199,10 +317,9 @@ export default {
                 const branches = this.factionBranches[faction];
                 const mainFactionInitial = this.initialFactionScores[faction] || 0;
                 const opposingFactionInitial = this.initialFactionScores[this.opposingFactions[faction]] || 0;
-
                 branches.forEach(branch => {
                     const branchInitialScore = this.factionScores[branch] || 0;
-                    finalBranchScoresForSecondary[branch] = (branchInitialScore * 0.9) + (mainFactionInitial * 0.35) - (opposingFactionInitial * 0.25);
+                    finalBranchScoresForSecondary[branch] = (branchInitialScore * 0.85) + (mainFactionInitial * 0.3) - (opposingFactionInitial * 0.2);
                 });
             }
 
@@ -213,8 +330,17 @@ export default {
 
             let secondaryBranchResult = null;
             const filteredBranchesForSecondary = sortedBranchesForSecondary.filter(branch => {
-                if (finalBranchScoresForSecondary[branch] < 0) return false;
-                if (branch === this.topFactionBranch) return false;
+                if (finalBranchScoresForSecondary[branch] <= 0) return false; 
+              
+                let parentFaction = null;
+                for (const fac in this.factionBranches) {
+                    if (this.factionBranches[fac].includes(branch)) {
+                        parentFaction = fac;
+                        break;
+                    }
+                }
+                if (parentFaction === this.topFaction && branch === this.topFactionBranch) return false; 
+
                 return true;
             });
 
@@ -222,7 +348,6 @@ export default {
             if (filteredBranchesForSecondary.length > 0) {
                 const topBranchSecondary = filteredBranchesForSecondary[0];
                 let topBranchMainFactionForSecondary = null;
-
                 for (const faction in this.factionBranches) {
                     if (this.factionBranches[faction].includes(topBranchSecondary)) {
                         topBranchMainFactionForSecondary = faction;
@@ -230,35 +355,39 @@ export default {
                     }
                 }
 
-                if (topBranchMainFactionForSecondary === this.topFaction) {
-                    if (filteredBranchesForSecondary.length >= 2) {
-                        const secondBranchSecondary = filteredBranchesForSecondary[1];
-                        let secondBranchMainFaction = null;
-                        for (const faction in this.factionBranches) {
-                            if (this.factionBranches[faction].includes(secondBranchSecondary)) {
-                                secondBranchMainFaction = faction;
-                                break;
-                            }
+           
+                if (topBranchMainFactionForSecondary !== this.topFaction) {
+                    secondaryBranchResult = topBranchSecondary;
+                } else if (filteredBranchesForSecondary.length >= 2) {
+                   
+                    const secondBranchSecondary = filteredBranchesForSecondary[1];
+                    let secondBranchMainFaction = null;
+                    for (const faction in this.factionBranches) {
+                        if (this.factionBranches[faction].includes(secondBranchSecondary)) {
+                            secondBranchMainFaction = faction;
+                            break;
                         }
-                        if (secondBranchMainFaction === this.topFaction) {
-                            secondaryBranchResult = topBranchSecondary;
+                    }
+               
+                    if (secondBranchMainFaction !== this.topFaction) {
+                        const topScore = finalBranchScoresForSecondary[topBranchSecondary] || 0;
+                        const secondScore = finalBranchScoresForSecondary[secondBranchSecondary] || 0;
+                        const coefficient = secondScore === 0 ? Infinity : topScore / secondScore;
+                        if (coefficient < 1.4) { 
+                            secondaryBranchResult = secondBranchSecondary;
                         } else {
-                            const topBranchSecondaryScore = finalBranchScoresForSecondary[topBranchSecondary] || 0;
-                            const secondBranchSecondaryScore = finalBranchScoresForSecondary[secondBranchSecondary] || 0;
-                            const coefficient = secondBranchSecondaryScore === 0 ? Infinity : topBranchSecondaryScore / secondBranchSecondaryScore;
-                            if (coefficient >= 0.65) {
-                                secondaryBranchResult = topBranchSecondary;
-                            } else {
-                                secondaryBranchResult = secondBranchSecondary;
-                            }
+                            secondaryBranchResult = topBranchSecondary; 
                         }
                     } else {
+                       
                         secondaryBranchResult = topBranchSecondary;
                     }
                 } else {
+                   
                     secondaryBranchResult = topBranchSecondary;
                 }
             }
+
 
             this.secondFactionBranch = secondaryBranchResult || '其他分支';
 
@@ -271,11 +400,19 @@ export default {
                         break;
                     }
                 }
-                if (!foundSecondFaction) {
-                    this.secondFaction = '其他信仰';
-                }
+                if (!foundSecondFaction) this.secondFaction = '其他信仰';
             } else {
-                this.secondFaction = '其他信仰';
+                if (sortedMainFactions.length > 1 && sortedMainFactions[1].name !== this.topFaction && sortedMainFactions[1].score > 0) { // Check for positive score
+                    this.secondFaction = sortedMainFactions[1].name;
+                    this.secondFactionBranch = '核心';
+                } else if (sortedMainFactions.length > 2 && sortedMainFactions[2].name !== this.topFaction && sortedMainFactions[2].score > 0) {
+                    this.secondFaction = sortedMainFactions[2].name;
+                    this.secondFactionBranch = '核心';
+                }
+                else {
+                    this.secondFaction = '其他信仰';
+                    this.secondFactionBranch = '无分支';
+                }
             }
 
 
@@ -284,16 +421,11 @@ export default {
             for (const faction in mainFactionTotalScores) {
                 grandTotalAbsMainScore += Math.abs(mainFactionTotalScores[faction] || 0);
             }
+            if (grandTotalAbsMainScore === 0) grandTotalAbsMainScore = 1;
             for (const faction in mainFactionTotalScores) {
                 const score = mainFactionTotalScores[faction] || 0;
-                let percentageString = '0.0';
-                let percentageValue = 0;
-
-                if (grandTotalAbsMainScore > 0) {
-                    percentageValue = parseFloat(((Math.abs(score) / grandTotalAbsMainScore) * 100).toFixed(1));
-                    percentageString = score < 0 ? `-${percentageValue.toFixed(1)}` : percentageValue.toFixed(1);
-                }
-
+                let percentageValue = parseFloat(((Math.abs(score) / grandTotalAbsMainScore) * 100).toFixed(1));
+                let percentageString = score < 0 ? `-${percentageValue.toFixed(1)}` : percentageValue.toFixed(1);
                 mainFactionPreferenceChartData.push({
                     name: faction,
                     percentage: percentageString,
@@ -310,16 +442,11 @@ export default {
             for (const branch in finalBranchScoresForSecondary) {
                 grandTotalAbsBranchScore += Math.abs(finalBranchScoresForSecondary[branch] || 0);
             }
+            if (grandTotalAbsBranchScore === 0) grandTotalAbsBranchScore = 1;
             for (const branch in finalBranchScoresForSecondary) {
                 const score = finalBranchScoresForSecondary[branch] || 0;
-                let percentageString = '0.0';
-                let percentageValue = 0;
-
-                if (grandTotalAbsBranchScore > 0) {
-                    percentageValue = parseFloat(((Math.abs(score) / grandTotalAbsBranchScore) * 100).toFixed(1));
-                    percentageString = score < 0 ? `-${percentageValue.toFixed(1)}` : percentageValue.toFixed(1);
-                }
-
+                let percentageValue = parseFloat(((Math.abs(score) / grandTotalAbsBranchScore) * 100).toFixed(1));
+                let percentageString = score < 0 ? `-${percentageValue.toFixed(1)}` : percentageValue.toFixed(1);
                 branchFactionPreferenceChartData.push({
                     name: branch,
                     percentage: percentageString,
@@ -329,15 +456,21 @@ export default {
             }
             branchFactionPreferenceChartData.sort((a, b) => b.score - a.score);
             this.branchFactionPreferenceData = branchFactionPreferenceChartData;
+
+
+            this.calculateCredibility();
         },
 
         restartQuiz() {
             this.currentQuestionIndex = 0;
+            this.userAnswers = {};
             this.initializeFactionScores();
             this.topFaction = null;
             this.secondFaction = null;
             this.topFactionBranch = null;
             this.secondFactionBranch = null;
+            this.credibilityScore = 100;
+            this.credibilityRating = '完全可信';
             this.mainFactionPreferenceData = [];
             this.branchFactionPreferenceData = [];
         },
@@ -358,6 +491,7 @@ export default {
     align-items: center;
     min-height: 100vh;
     padding: 10px;
+    background-color: #f4f7f6;
 }
 
 .quiz-container {
@@ -387,7 +521,9 @@ export default {
     border-radius: inherit;
     padding: 2px;
     background: linear-gradient(to right, #ec8a79, #b042bf);
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
     -webkit-mask-composite: destination-out;
     mask-composite: exclude;
     opacity: 0;
@@ -405,6 +541,7 @@ export default {
 .result-card:hover::before {
     opacity: 1;
 }
+
 
 .question-header,
 .result-header {
@@ -453,6 +590,7 @@ export default {
     }
 }
 
+
 .option-button,
 .restart-button,
 .previous-button {
@@ -487,6 +625,7 @@ export default {
     transform: translateY(0);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
+
 
 .faction-name {
     font-weight: 700;
@@ -535,6 +674,7 @@ export default {
 .previous-button {
     margin-right: 20px;
 }
+
 
 .charts-container {
     display: flex;
@@ -597,5 +737,61 @@ export default {
 
 .bar.negative {
     background-color: #f25f5c;
+}
+
+.credibility-section {
+    margin-top: 30px;
+    padding: 20px;
+    background-color: #f8f8f8;
+    border-radius: 12px;
+    text-align: center;
+    border: 1px solid #eee;
+}
+
+.credibility-rating {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    padding: 8px 15px;
+    border-radius: 8px;
+    display: inline-block;
+    color: #fff;
+}
+
+.credibility-explanation {
+    font-size: 15px;
+    color: #666;
+    margin-top: 5px;
+}
+
+.rating-unreliable {
+    background-color: #d9534f;
+}
+
+.rating-low {
+    background-color: #f0ad4e;
+}
+
+.rating-lower {
+    background-color: #f0ad4e;
+    opacity: 0.9;
+}
+
+.rating-average {
+    background-color: #5bc0de;
+}
+
+.rating-higher {
+    background-color: #5bc0de;
+    opacity: 0.9;
+}
+
+.rating-high {
+    background-color: #5cb85c;
+    opacity: 0.9;
+}
+
+.rating-perfect {
+    background-color: #5cb85c;
 }
 </style>
