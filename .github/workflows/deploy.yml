@@ -1,3 +1,4 @@
+
 name: WIKI
 
 on:
@@ -30,33 +31,23 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0 # 如果未启用 lastUpdated，则不需要
-
+      - uses: pnpm/action-setup@v3 # 如果使用 pnpm，请取消注释
+      # - uses: oven-sh/setup-bun@v1 # 如果使用 Bun，请取消注释
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: pnpm # 为 pnpm 配置缓存
-
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v3
-        with:
-          version: 10 # 指定你项目使用的 pnpm 版本，例如 8 或 9
-          run_install: false # 我们将在下一步手动运行 install
-
-      # - uses: oven-sh/setup-bun@v1 # 如果使用 Bun，请取消注释 (保持注释)
-
+          cache: pnpm # 或 pnpm / yarn
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Install dependencies
-        run: pnpm install 
-
+        run: pnpm install # 或 pnpm install / yarn install / bun install
       - name: Build with VitePress
-        run: pnpm run docs:build # 运行构建命令
-
+        run: pnpm docs:build # 或 pnpm docs:build / yarn docs:build / bun run docs:build
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: docs/.vitepress/dist # 确保这个路径是正确的构建输出目录
+          path: docs/.vitepress/dist
 
   # 部署工作
   deploy:
