@@ -491,7 +491,6 @@ export default {
     align-items: center;
     min-height: 100vh;
     padding: 10px;
-    background-color: #f4f7f6;
 }
 
 .quiz-container {
@@ -765,11 +764,11 @@ export default {
 }
 
 .rating-unreliable {
-    background-color: #d9534f;
+    background-color: #9f0904;
 }
 
 .rating-low {
-    background-color: #f0ad4e;
+    background-color: #d9534f;
 }
 
 .rating-lower {
@@ -778,7 +777,7 @@ export default {
 }
 
 .rating-average {
-    background-color: #5bc0de;
+    background-color: #235a89;
 }
 
 .rating-higher {
@@ -792,6 +791,6 @@ export default {
 }
 
 .rating-perfect {
-    background-color: #5cb85c;
+    background-color: #5cdc5c;
 }
 </style>

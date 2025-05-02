@@ -1,0 +1,94 @@
+@keyframes rainbow-red-orange-purple {
+  0%   { --rainbow-prev: #8A0CCF; --rainbow-next: #FF4A8C; } /* 深紫 -> 粉红 */
+  1.25%{ --rainbow-prev: #8E10D1; --rainbow-next: #FF4C88; }
+  2.5% { --rainbow-prev: #9314D3; --rainbow-next: #FF4E84; }
+  3.75%{ --rainbow-prev: #9919D5; --rainbow-next: #FF517F; }
+  5%   { --rainbow-prev: #A01DD7; --rainbow-next: #FF547A; }
+  6.25%{ --rainbow-prev: #A622D9; --rainbow-next: #FF5775; }
+  7.5% { --rainbow-prev: #AD27DB; --rainbow-next: #FF5A70; } /* 紫 -> 偏红粉 */
+  8.75%{ --rainbow-prev: #B42BDD; --rainbow-next: #FF5D6B; }
+  10%  { --rainbow-prev: #BB30DF; --rainbow-next: #FF6066; }
+  11.25%{ --rainbow-prev: #C135E1; --rainbow-next: #FF6461; }
+  12.5% { --rainbow-prev: #C839E3; --rainbow-next: #FF685C; }
+  13.75%{ --rainbow-prev: #CE3EE5; --rainbow-next: #FF6C57; }
+  15%   { --rainbow-prev: #D443E7; --rainbow-next: #FF7052; } /* 洋红 -> 橙红 */
+  16.25%{ --rainbow-prev: #D948E9; --rainbow-next: #FF744D; }
+  17.5% { --rainbow-prev: #DE4DEB; --rainbow-next: #FF7848; }
+  18.75%{ --rainbow-prev: #E352ED; --rainbow-next: #FF7D43; }
+  20%   { --rainbow-prev: #E757EF; --rainbow-next: #FF813E; }
+  21.25%{ --rainbow-prev: #EB5CF1; --rainbow-next: #FF8539; }
+  22.5% { --rainbow-prev: #EF61F3; --rainbow-next: #FF8934; }
+  23.75%{ --rainbow-prev: #F366F5; --rainbow-next: #FF8D2F; }
+  25%   { --rainbow-prev: #F66BF7; --rainbow-next: #FF912B; } /* 粉 -> 橙 */
+  26.25%{ --rainbow-prev: #F86FF9; --rainbow-next: #FF9526; }
+  27.5% { --rainbow-prev: #FA74FB; --rainbow-next: #FF9822; }
+  28.75%{ --rainbow-prev: #FC79FD; --rainbow-next: #FF9C1D; }
+  30%   { --rainbow-prev: #FD7FFF; --rainbow-next: #FFA018; }
+  31.25%{ --rainbow-prev: #FE84FF; --rainbow-next: #FFA314; }
+  32.5% { --rainbow-prev: #FF8AFF; --rainbow-next: #FFA70F; }
+  33.75%{ --rainbow-prev: #FF8FFF; --rainbow-next: #FFAB0B; }
+  35%   { --rainbow-prev: #FF95FF; --rainbow-next: #FFAE08; } /* 亮粉 -> 黄橙 */
+  36.25%{ --rainbow-prev: #FF9AFF; --rainbow-next: #FFB205; }
+  37.5% { --rainbow-prev: #FFA0FF; --rainbow-next: #FFB503; }
+  38.75%{ --rainbow-prev: #FFA5FF; --rainbow-next: #FFB801; }
+  40%   { --rainbow-prev: #FFABFF; --rainbow-next: #FFBB00; }
+  41.25%{ --rainbow-prev: #FFB0FF; --rainbow-next: #FDBE00; }
+  42.5% { --rainbow-prev: #FFB6FF; --rainbow-next: #FBC100; }
+  43.75%{ --rainbow-prev: #FFBBFF; --rainbow-next: #F8C300; }
+  45%   { --rainbow-prev: #FFC1FF; --rainbow-next: #F5C600; } /* 浅粉紫 -> 橙黄 */
+  46.25%{ --rainbow-prev: #FFC6FF; --rainbow-next: #F2C800; }
+  47.5% { --rainbow-prev: #FFCCFF; --rainbow-next: #EFCA00; }
+  48.75%{ --rainbow-prev: #FFD1FF; --rainbow-next: #ECCC00; }
+  50%   { --rainbow-prev: #FFD7FF; --rainbow-next: #E9CF00; } /* 浅紫 -> 偏橙黄 */
+  51.25%{ --rainbow-prev: #FAD1FF; --rainbow-next: #E6D100; }
+  52.5% { --rainbow-prev: #F5CCFF; --rainbow-next: #E3D300; }
+  53.75%{ --rainbow-prev: #F0C8FF; --rainbow-next: #E0D500; }
+  55%   { --rainbow-prev: #EBC3FF; --rainbow-next: #DDD700; } /* 浅紫 -> 靠近红的橙 */
+  56.25%{ --rainbow-prev: #E6BFFF; --rainbow-next: #DADC00; }
+  57.5% { --rainbow-prev: #E1BBFF; --rainbow-next: #D7DE00; }
+  58.75%{ --rainbow-prev: #DCB6FF; --rainbow-next: #D4E000; }
+  60%   { --rainbow-prev: #D7B2FF; --rainbow-next: #D1E200; }
+  61.25%{ --rainbow-prev: #D2AEFF; --rainbow-next: #CEE400; }
+  62.5% { --rainbow-prev: #CDAAFF; --rainbow-next: #CBE600; }
+  63.75%{ --rainbow-prev: #C8A6FF; --rainbow-next: #C8E800; }
+  65%   { --rainbow-prev: #C3A2FF; --rainbow-next: #C5EA00; } /* 紫 -> 偏红的紫红 */
+  66.25%{ --rainbow-prev: #BE9EFF; --rainbow-next: #C2EB00; }
+  67.5% { --rainbow-prev: #B99AFF; --rainbow-next: #BFED00; }
+  68.75%{ --rainbow-prev: #B496FF; --rainbow-next: #BCEF00; }
+  70%   { --rainbow-prev: #AF92FF; --rainbow-next: #B9F100; }
+  71.25%{ --rainbow-prev: #AA8EFF; --rainbow-next: #B6F300; }
+  72.5% { --rainbow-prev: #A58AFF; --rainbow-next: #B3F500; }
+  73.75%{ --rainbow-prev: #A086FF; --rainbow-next: #B0F700; }
+  75%   { --rainbow-prev: #9B82FF; --rainbow-next: #ADF900; } /* 蓝紫 -> 品红 */
+  76.25%{ --rainbow-prev: #967EFF; --rainbow-next: #ABFB00; }
+  77.5% { --rainbow-prev: #917AFF; --rainbow-next: #A8FD00; }
+  78.75%{ --rainbow-prev: #8D76FF; --rainbow-next: #A5FF00; }
+  80%   { --rainbow-prev: #8872FF; --rainbow-next: #9AFF00; }
+  81.25%{ --rainbow-prev: #846FFF; --rainbow-next: #8FFF00; }
+  82.5% { --rainbow-prev: #806BFF; --rainbow-next: #84FF00; }
+  83.75%{ --rainbow-prev: #7C67FF; --rainbow-next: #7AFF00; }
+  85%   { --rainbow-prev: #7864FF; --rainbow-next: #6FFF00; } /* 接近起始紫 -> 玫红 */
+  86.25%{ --rainbow-prev: #7560FF; --rainbow-next: #64FF00; }
+  87.5% { --rainbow-prev: #725CFF; --rainbow-next: #5AFF00; }
+  88.75%{ --rainbow-prev: #7059FF; --rainbow-next: #4FFF00; }
+  90%   { --rainbow-prev: #6E55FF; --rainbow-next: #45FF00; }
+  91.25%{ --rainbow-prev: #6C52FF; --rainbow-next: #3AFF00; }
+  92.5% { --rainbow-prev: #6A4FFF; --rainbow-next: #30FF00; }
+  93.75%{ --rainbow-prev: #694CFF; --rainbow-next: #25FF00; }
+  95%   { --rainbow-prev: #6749FF; --rainbow-next: #1AFF00; }
+  96.25%{ --rainbow-prev: #7047E8; --rainbow-next: #FF30A0; } /* 微调以平滑过渡回起点 */
+  97.5% { --rainbow-prev: #7A40DA; --rainbow-next: #FF38A4; }
+  98.75%{ --rainbow-prev: #832ED0; --rainbow-next: #FF41A8; }
+  to   { --rainbow-prev: #8A0CCF; --rainbow-next: #FF4A8C; } /* 回到起点 */
+}
+
+:root {
+  animation: rainbow-red-orange-purple 8s linear infinite; 
+
+  --rainbow-prev: #8A0CCF;
+  --rainbow-next: #FF4A8C; 
+  --vp-home-hero-name-color: transparent;
+  --vp-home-hero-name-background: -webkit-linear-gradient(120deg, var(--rainbow-prev) 30%, var(--rainbow-next));
+  --vp-home-hero-image-background-image: linear-gradient(-45deg, var(--rainbow-prev) 30%, var(--rainbow-next));
+  --vp-home-hero-image-filter: blur(80px);
+}

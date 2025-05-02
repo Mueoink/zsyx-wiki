@@ -1,11 +1,14 @@
+---
+noTitle: false
 
+---
 <p align="center">
     <a href="/">
         <img width="150" src="../public/logo.png" alt="web logo" />
     </a>
 </p>
 
-<h2 align="center">诸神愚戏 WIKI<Badge type="tip">v1.3.3</Badge></h2>
+<h2 align="center">诸神愚戏 WIKI<Badge type="tip">v1.4.0</Badge></h2>
 
 <h3 align="center">基于《诸神愚戏》小说搭建的WIKI网站</h3>
 
@@ -67,8 +70,16 @@ const members = [
     title:'项目负责'
   },
 ]
+
+
 </script>
 
 <VPTeamMembers size="small" :members="members" />
+
+<!-- <p align="center">
+<a href="https://afdian.com/a/mueomo" >
+<img width="200" src="https://pic1.afdiancdn.com/static/img/welcome/button-sponsorme.png" alt=""></a >
+</p> -->
+
 
 

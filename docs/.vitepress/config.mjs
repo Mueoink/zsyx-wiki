@@ -2,12 +2,84 @@ import { defineConfig } from 'vitepress'
 
 // https://vitepress.dev/reference/site-config
 
+// .vitepress/config.ts
+import { defineTeekConfig } from "vitepress-theme-teek/config";
+
+
+// Teek 主题配置
+const teekConfig = defineTeekConfig({
+  teekHome: false,
+
+  article: {
+    showIcon: true, // 作者、日期、分类、标签、字数、阅读时长、浏览量等文章信息的图标是否显示
+    dateFormat: "yyyy-MM-dd hh:mm:ss", // 文章日期格式，首页和文章页解析日期时使用
+    showInfo: false, // 是否展示作者、日期、分类、标签、字数、阅读时长、浏览量等文章信息，分别作用于首页和文章页
+    showAuthor: false, // 是否展示作者
+    showCreateDate: true, // 是否展示创建日期
+    showUpdateDate: false, // 是否展示更新日期，仅在文章页显示
+    showCategory: false, // 是否展示分类
+    showTag: false, // 是否展示标签
+  },
+  breadcrumb: {
+    enabled: false, // 是否启用面包屑
+    showCurrentName: false, // 面包屑最后一列是否显示当前文章的文件名
+    separator: "/", // 面包屑分隔符
+  },
+  articleShare: {
+    enabled: true, // 是否开启文章链接分享功能
+    text: "分享此页面", // 分享按钮文本
+    copiedText: "链接已复制", // 复制成功文本
+    query: false, // 是否包含查询参数
+    hash: false, // 是否包含哈希值
+  },
+  footerInfo: {
+    // 页脚信息，支持 HTML 格式（位于主题版权上方）
+    topMessage: ["基于 CC BY-NC-ND 4.0. 发布"],
+
+    // 页脚信息，支持 HTML 格式（位于主题版权下方）
+    // bottomMessage: ["Released under the CC BY-NC-ND 4.0."],
+
+    // 主题版权配置
+    theme: {
+      show: false, // 是否显示主题版权，建议显示
+      name: "Mueo", // 自定义名称
+      link: "", // 自定义链接
+    },
+
+    // 博客版权配置
+    copyright: {
+      show: true, // 是否显示博客版权
+      createYear: 2024, // 创建年份
+      suffix: "诸神愚戏 WIKI", // 后缀
+    },
+    // ICP 备案信息配置
+    // icpRecord: {
+    //   name: "桂ICP备2021009994号",
+    //   link: "http://beian.miit.gov.cn/",
+    // },
+    //
+    // 网络安全备案信息配置
+    // securityRecord: {
+    //   name: "",
+    //   link: "",
+    // },
+  },
+});
+// VitePress 配置
 export default defineConfig({
+  extends: teekConfig,
   title: "诸神愚戏 WIKI",
   head: [["link", { rel: "icon", href: "/logo.png" }]],
   description: "诸神愚戏 WIKI",
   lang: "zh",
   lastUpdated: true,
+  lastUpdated: {
+    text: "最后更新于",
+    formatOptions: {
+      dateStyle: "full",
+      timeStyle: "medium",
+    },
+  },
   themeConfig: {
     logo: "/logo.png",
     search: { provider: "local" },
@@ -28,7 +100,6 @@ export default defineConfig({
       "/wiki/": [
         {
           text: "开始",
-          collapsed: false,
           items: [
             { text: "介绍", link: "/wiki/start" },
             { text: "信仰测试", link: "/wiki/test" },
@@ -387,10 +458,10 @@ export default defineConfig({
       "/contribution/": [
         {
           text: "贡献",
-          collapsed: false,
           items: [
             { text: "如何贡献", link: "/contribution/contribute" },
             { text: "编写要求", link: "/contribution/compile" },
+            { text: "更新指南", link: "/contribution/updata" },
             { text: "内容管理流程规范", link: "/contribution/flow" },
             { text: "贡献审核指南", link: "/contribution/guide" },
             { text: "贡献团队", link: "/contribution/team" },
@@ -406,18 +477,15 @@ export default defineConfig({
     socialLinks: [
       { icon: "github", link: "https://github.com/Mueoink/zsyx-wiki/" },
     ],
-    markdown: {
-      container: {
-        tipLabel: "提示",
-        warningLabel: "警告",
-        dangerLabel: "危险",
-        infoLabel: "信息",
-        detailsLabel: "详细信息",
-      },
-    },
-    footer: {
-      message: "Released under the CC BY-NC-ND 4.0.",
-      copyright: "Copyright © 2024-present Mueo",
+  },
+  markdown: {
+    lineNumbers: true,
+    container: {
+      tipLabel: "提示",
+      warningLabel: "警告",
+      dangerLabel: "危险",
+      infoLabel: "信息",
+      detailsLabel: "详细信息",
     },
   },
 });
