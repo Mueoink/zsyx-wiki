@@ -1,8 +1,7 @@
-import { defineConfig } from 'vitepress'
-
 // https://vitepress.dev/reference/site-config
-
 // .vitepress/config.ts
+
+import { defineConfig } from "vitepress";
 import { defineTeekConfig } from "vitepress-theme-teek/config";
 
 
