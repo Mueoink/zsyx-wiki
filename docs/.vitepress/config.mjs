@@ -9,6 +9,9 @@ import { defineTeekConfig } from "vitepress-theme-teek/config";
 // Teek 主题配置
 const teekConfig = defineTeekConfig({
   teekHome: false,
+  vitePlugins: {
+    permalink: false, // 低版本bug
+  },
 
   article: {
     showIcon: true, // 作者、日期、分类、标签、字数、阅读时长、浏览量等文章信息的图标是否显示
@@ -72,7 +75,6 @@ export default defineConfig({
   head: [["link", { rel: "icon", href: "/logo.png" }]],
   description: "诸神愚戏 WIKI",
   lang: "zh",
-  lastUpdated: true,
   lastUpdated: {
     text: "最后更新于",
     formatOptions: {
