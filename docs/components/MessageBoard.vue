@@ -102,23 +102,26 @@ const props = defineProps({
 const visibleCount = ref(props.initialCount);
 const expandedStates = reactive<{ [key: number]: boolean }>({});
 
+
+function shuffleArray<T>(array: T[]): T[] {
+    const shuffled = [...array];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; 
+    }
+    return shuffled;
+}
+
 const processedMessages = computed(() => {
-    const contributors: ProcessedMessage[] = [];
-    const supporters: ProcessedMessage[] = [];
-    const normal: ProcessedMessage[] = [];
 
-    props.messages.forEach((message, index) => {
-        const processedMessage = { ...message, originalIndex: index };
-        if (message.level === '贡献者') {
-            contributors.push(processedMessage);
-        } else if (message.level === '支持者') {
-            supporters.push(processedMessage);
-        } else {
-            normal.push(processedMessage);
-        }
-    });
+    const messagesWithIndex = props.messages.map((message, index) => ({
+        ...message,
+        originalIndex: index
+    }));
 
-    return [...contributors, ...supporters, ...normal];
+    const shuffledMessages = shuffleArray(messagesWithIndex);
+
+    return shuffledMessages;
 });
 
 
@@ -169,6 +172,7 @@ const shouldShowAvatar = (message: Message): boolean => {
 };
 
 watch(() => props.messages, () => {
+
 }, { deep: true });
 
 </script>
@@ -205,20 +209,16 @@ watch(() => props.messages, () => {
     box-shadow: 0 1px 5px var(--vp-c-divider-light);
 }
 
-/* 背景色仍然使用变量，保持主题一致性 */
 .level-contributor {
     background-color: var(--vp-c-brand-soft);
-    /* 大致为浅蓝 */
 }
 
 .level-supporter {
     background-color: var(--vp-c-yellow-soft);
-    /* 大致为浅黄 */
 }
 
 .level-normal {
     background-color: var(--vp-c-green-soft);
-    /* 大致为浅绿 */
 }
 
 
@@ -299,7 +299,6 @@ watch(() => props.messages, () => {
     line-height: 1.2;
 }
 
-/* 基础徽章样式 */
 .badge {
     font-size: 0.7rem;
     padding: 2px 6px;
@@ -314,10 +313,8 @@ watch(() => props.messages, () => {
     vertical-align: baseline;
     flex-shrink: 0;
     color: rgba(255, 255, 255, 0.95);
-    /* box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); */
 }
 
-/* 贡献者*/
 .badge-contributor {
     background-color: rgba(47, 37, 235, 0.834);
 }
@@ -332,7 +329,6 @@ watch(() => props.messages, () => {
 
 }
 
-/* 支持者 */
 .badge-supporter {
     background-color: rgb(217, 105, 6);
 }
@@ -347,10 +343,8 @@ watch(() => props.messages, () => {
 
 }
 
-/* 普通 */
 .level-normal .faith-badge {
     background-color: rgb(13, 204, 102);
-    /* 洋红色/紫红色 (Fuchsia-600) */
 }
 
 .level-normal .profession-badge {
