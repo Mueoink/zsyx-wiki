@@ -53,7 +53,7 @@ noTitle: false
 
 ## 留言板
 ::: note 提示
- 📬 投稿请联系 **Mars** [3835227971@qq.com](3835227971@qq.com) ，所有留言均审核后定期更新
+ 📬 投稿请联系 **Mars** [chimanlaw@qq.com](chimanlaw@qq.com) ，所有留言均审核后定期更新
 :::
 
 <MessageBoard :messages="messages" />
