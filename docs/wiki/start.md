@@ -13,7 +13,7 @@ noTitle: false
 <h3 align="center">基于《诸神愚戏》小说搭建的WIKI网站</h3>
 
 
-## 前言
+## 许可
 :::tip
 
 本文档所有**原创内容**遵从 [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.zh-hans) 协议 
@@ -51,7 +51,12 @@ noTitle: false
 **联系邮箱：[mueo@mueoo.com](mailto:mueo@mueoo.com)**
 
 
+## 留言板
+::: note 提示
+ 📬 投稿请联系 **Mars** [3835227971@qq.com](3835227971@qq.com) ，所有留言均审核后定期更新
+:::
 
+<MessageBoard :messages="messages" />
 
 ## 主要贡献
 
@@ -59,6 +64,7 @@ noTitle: false
 
 <script setup>
 import { VPTeamMembers } from 'vitepress/theme'
+import { messages } from '../js/messages.js'
 const members = [
   {
     avatar: 'https://q1.qlogo.cn/g?b=qq&nk=410757752&s=640',

@@ -120,7 +120,6 @@ export default defineConfig({
             { text: "信仰测试", link: "/wiki/test" },
             { text: "虚空祈求", link: "/wiki/pray" },
             { text: "信仰回响", link: "/wiki/divination" },
-            { text: "留言板", link: "/wiki/message-board" },
           ],
         },
 
