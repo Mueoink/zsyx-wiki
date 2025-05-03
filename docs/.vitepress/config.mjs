@@ -9,6 +9,23 @@ import { defineTeekConfig } from "vitepress-theme-teek/config";
 const teekConfig = defineTeekConfig({
   teekHome: false,
 
+  vitePlugins: {
+    permalinkOption: {
+      ignoreList: ["js", "components"], // 支持正则表达式
+    },
+    sidebarOption: {
+      ignoreList: ["js", "components"], // 支持正则表达式
+    },
+  },
+  //  bodyBgImg: {
+  //   imgSrc: ["body.png"], // body 背景图片链接。单张图片 string | 多张图片 string[], 多张图片时每隔 imgInterval 秒换一张
+  //   imgOpacity: 0.3, // body 背景图透明度，选值 0.1 ~ 1.0
+  //   imgInterval: 15000, //  body 当多张背景图时（imgSrc 为数组），设置切换时间，单位：毫秒
+  //   imgShuffle: false, // body 背景图是否随机切换，为 false 时按顺序切换
+  //   mask: false, // body 背景图遮罩
+  //   maskBg: "rgba(0, 0, 0, 0.2)", // body 背景图遮罩颜色，如果为数字，则是 rgba(0, 0, 0, ${maskBg})，如果为字符串，则作为背景色。mask 为 true 时生效
+  // },
+
   article: {
     showIcon: true, // 作者、日期、分类、标签、字数、阅读时长、浏览量等文章信息的图标是否显示
     dateFormat: "yyyy-MM-dd hh:mm:ss", // 文章日期格式，首页和文章页解析日期时使用
@@ -463,6 +480,12 @@ export default defineConfig({
             { text: "内容管理流程规范", link: "/contribution/flow" },
             { text: "贡献审核指南", link: "/contribution/guide" },
             { text: "贡献团队", link: "/contribution/team" },
+          ],
+        },
+        {
+          text: "开发",
+          items: [
+            { text: "更新日志", link: "/contribution/logs" },
           ],
         },
       ],

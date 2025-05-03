@@ -16,5 +16,3 @@ hero:
     - theme: alt
       text: 编写指南
       link: /contribution/compile
-
-

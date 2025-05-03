@@ -5,7 +5,7 @@
 
 ------------------------------
 
-## 前言
+## 许可
 
 本文档所有**原创内容**遵从 [CC BY-NC-ND 4.0](https://creativecommons.org/licenses/by-nc-nd/4.0/deed.zh-hans) 协议 
 
@@ -38,10 +38,27 @@
 
 **联系邮箱：mueo@mueoo.com**
 
+## 本地部署
 
-## 贡献
-排名不分先后，感谢各位付出
+拉取 WIKI 项目
 
-[Mueo](#贡献)
+```
+git clone https://github.com/Mueoink/zsyx-wiki.git
+```
 
+安装依赖
+
+```
+pnpm install
+```
+
+启动 WIKI
+```
+pnpm docs:dev
+```
+
+构建
+```
+pnpm docs:build
+```
 
