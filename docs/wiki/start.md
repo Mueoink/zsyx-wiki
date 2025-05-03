@@ -8,7 +8,7 @@ noTitle: false
     </a>
 </p>
 
-<h2 align="center">诸神愚戏 WIKI<Badge type="tip">v1.4.0</Badge></h2>
+<h2 align="center">诸神愚戏 WIKI<Badge type="tip">v1.4.1</Badge></h2>
 
 <h3 align="center">基于《诸神愚戏》小说搭建的WIKI网站</h3>
 

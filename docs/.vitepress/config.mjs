@@ -27,11 +27,11 @@ const teekConfig = defineTeekConfig({
   // },
 
   article: {
-    showIcon: true, // 作者、日期、分类、标签、字数、阅读时长、浏览量等文章信息的图标是否显示
+    showIcon: false, // 作者、日期、分类、标签、字数、阅读时长、浏览量等文章信息的图标是否显示
     dateFormat: "yyyy-MM-dd hh:mm:ss", // 文章日期格式，首页和文章页解析日期时使用
     showInfo: false, // 是否展示作者、日期、分类、标签、字数、阅读时长、浏览量等文章信息，分别作用于首页和文章页
     showAuthor: false, // 是否展示作者
-    showCreateDate: true, // 是否展示创建日期
+    showCreateDate: false, // 是否展示创建日期
     showUpdateDate: false, // 是否展示更新日期，仅在文章页显示
     showCategory: false, // 是否展示分类
     showTag: false, // 是否展示标签
@@ -120,6 +120,7 @@ export default defineConfig({
             { text: "信仰测试", link: "/wiki/test" },
             { text: "虚空祈求", link: "/wiki/pray" },
             { text: "信仰回响", link: "/wiki/divination" },
+            { text: "留言板", link: "/wiki/message-board" },
           ],
         },
 
@@ -484,9 +485,7 @@ export default defineConfig({
         },
         {
           text: "开发",
-          items: [
-            { text: "更新日志", link: "/contribution/logs" },
-          ],
+          items: [{ text: "更新日志", link: "/contribution/logs" }],
         },
       ],
     },
