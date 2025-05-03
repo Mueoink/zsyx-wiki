@@ -14,12 +14,36 @@
                         </div>
                     </div>
                     <div class="name-area">
-                        <span class="message-name" :class="{ 'anonymous': !message.name }">
-                            {{ message.name || '匿名用户' }}
-                        </span>
-                        <span v-if="message.level !== '普通'" :class="['level-badge', getLevelBadgeClass(message.level)]">
-                            {{ message.level }}
-                        </span>
+                        <template v-if="message.level === '普通'">
+                            <div class="name-badge-line-normal">
+                                <span class="message-name" :class="{ 'anonymous': !message.name }">
+                                    {{ message.name || '匿名用户' }}
+                                </span>
+                                <span v-if="message.badges && message.badges[0]" class="badge faith-badge">
+                                    {{ message.badges[0] }}
+                                </span>
+                                <span v-if="message.badges && message.badges[1]" class="badge profession-badge">
+                                    {{ message.badges[1] }}
+                                </span>
+                            </div>
+                        </template>
+                        <template v-else>
+                            <span class="message-name" :class="{ 'anonymous': !message.name }">
+                                {{ message.name || '匿名用户' }}
+                            </span>
+                            <div class="badge-row">
+                                <span v-if="message.level !== '普通'"
+                                    :class="['badge', getLevelBadgeClass(message.level)]">
+                                    {{ message.level }}
+                                </span>
+                                <span v-if="message.badges && message.badges[0]" class="badge faith-badge">
+                                    {{ message.badges[0] }}
+                                </span>
+                                <span v-if="message.badges && message.badges[1]" class="badge profession-badge">
+                                    {{ message.badges[1] }}
+                                </span>
+                            </div>
+                        </template>
                     </div>
                     <div class="expand-indicator">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
@@ -36,7 +60,7 @@
             </div>
 
             <div v-if="showLoadMoreButton" class="load-more-container">
-                <button @click="loadMore" class="load-more-button">
+                <button @click.stop="loadMore" class="load-more-button">
                     加载更多留言
                 </button>
             </div>
@@ -52,6 +76,7 @@ interface Message {
     level: '贡献者' | '支持者' | '普通';
     name?: string;
     avatar?: string;
+    badges?: string[];
 }
 
 interface ProcessedMessage extends Message {
@@ -106,7 +131,6 @@ const showLoadMoreButton = computed(() => {
 });
 
 const loadMore = (event: MouseEvent) => {
-    event.stopPropagation();
     visibleCount.value = Math.min(
         visibleCount.value + props.incrementCount,
         processedMessages.value.length
@@ -141,13 +165,11 @@ const getLevelBadgeClass = (level: Message['level']): string => {
 }
 
 const shouldShowAvatar = (message: Message): boolean => {
-    return !!message.avatar && (message.level === '贡献者' || message.level === '支持者');
+    return message.level !== '普通' && !!message.avatar;
 };
 
 watch(() => props.messages, () => {
-
 }, { deep: true });
-
 
 </script>
 
@@ -183,16 +205,20 @@ watch(() => props.messages, () => {
     box-shadow: 0 1px 5px var(--vp-c-divider-light);
 }
 
+/* 背景色仍然使用变量，保持主题一致性 */
 .level-contributor {
     background-color: var(--vp-c-brand-soft);
+    /* 大致为浅蓝 */
 }
 
 .level-supporter {
     background-color: var(--vp-c-yellow-soft);
+    /* 大致为浅黄 */
 }
 
 .level-normal {
-    background-color: var(--vp-c-bg-soft);
+    background-color: var(--vp-c-green-soft);
+    /* 大致为浅绿 */
 }
 
 
@@ -204,17 +230,15 @@ watch(() => props.messages, () => {
 
 .avatar-wrapper {
     flex-shrink: 0;
+    align-self: flex-start;
 }
 
 .avatar-container {
-    padding: 0.75px;
-    /* 内边距 */
+    padding: 1px;
     background-color: rgba(3, 3, 3, 0.41);
     border-radius: 50%;
-    /* 圆形 */
     display: inline-block;
     line-height: 0;
-
 }
 
 .message-avatar {
@@ -232,16 +256,34 @@ watch(() => props.messages, () => {
     line-height: 1.3;
     flex-grow: 1;
     overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
     margin-right: 0.5rem;
 }
+
+.name-badge-line-normal {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    width: 100%;
+}
+
 
 .message-name {
     font-weight: 500;
     color: var(--vp-c-text-1);
     font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
+
+.name-badge-line-normal .message-name {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    flex-shrink: 1;
+}
+
 
 .message-name.anonymous {
     font-weight: 400;
@@ -249,31 +291,79 @@ watch(() => props.messages, () => {
     font-style: italic;
 }
 
-.level-badge {
-    font-size: 0.65rem;
-    padding: 1px 5px;
-    border-radius: 4px;
-    margin-top: 0.15rem;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 500;
+.badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.2rem;
     line-height: 1.2;
 }
 
-.badge-contributor {
-    background-color: var(--vp-c-brand-1);
-    color: var(--vp-c-bg-soft);
+/* 基础徽章样式 */
+.badge {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 5px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    vertical-align: baseline;
+    flex-shrink: 0;
+    color: rgba(255, 255, 255, 0.95);
+    /* box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); */
 }
 
-.badge-supporter {
-    background-color: var(--vp-c-yellow-2);
-    color: var(--vp-c-bg-soft);
+/* 贡献者*/
+.badge-contributor {
+    background-color: rgba(47, 37, 235, 0.834);
 }
+
+.level-contributor .faith-badge {
+    background-color: rgba(118, 44, 229, 0.862);
+
+}
+
+.level-contributor .profession-badge {
+    background-color: rgb(70, 121, 231);
+
+}
+
+/* 支持者 */
+.badge-supporter {
+    background-color: rgb(217, 105, 6);
+}
+
+.level-supporter .faith-badge {
+    background-color: rgb(252, 67, 39);
+
+}
+
+.level-supporter .profession-badge {
+    background-color: rgb(249, 165, 10);
+
+}
+
+/* 普通 */
+.level-normal .faith-badge {
+    background-color: rgb(13, 204, 102);
+    /* 洋红色/紫红色 (Fuchsia-600) */
+}
+
+.level-normal .profession-badge {
+    background-color: rgb(9, 162, 121);
+
+}
+
 
 .expand-indicator {
     flex-shrink: 0;
     color: var(--vp-c-text-3);
     transition: transform 0.3s ease;
+    align-self: center;
 }
 
 .message-item.is-expanded .expand-indicator {
@@ -290,7 +380,6 @@ watch(() => props.messages, () => {
 
 .message-item.is-expanded .message-content-wrapper {
     max-height: 500px;
-    /* 可以根据需要调整 */
     opacity: 1;
     margin-top: 0.75rem;
 }
@@ -308,8 +397,13 @@ watch(() => props.messages, () => {
     padding-right: 0.1rem;
 }
 
-.level-contributor .message-content {
+.level-contributor .message-content,
+.level-supporter .message-content {
     color: var(--vp-c-text-1);
+}
+
+.level-normal .message-content {
+    color: var(--vp-c-text-2);
 }
 
 .message-content p {

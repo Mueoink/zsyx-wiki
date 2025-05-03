@@ -84,4 +84,9 @@ export const teamMembers = [
     name: "初压",
     title: "内容贡献",
   },
+  {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=744078196&s=640",
+    name: "卿",
+    title: "内容贡献",
+  },
 ];
