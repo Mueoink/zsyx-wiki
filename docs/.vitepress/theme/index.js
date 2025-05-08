@@ -21,7 +21,6 @@ import "vitepress-theme-teek/index.css";
 import "vitepress-theme-teek/theme-chalk/tk-mark.css";  
 import "vitepress-theme-teek/theme-chalk/tk-sidebar.css"; 
 import "vitepress-theme-teek/theme-chalk/tk-code-block-mobile.css"; 
-
 import "vitepress-theme-teek/theme-chalk/tk-banner-desc-gradient.css";
 import "vitepress-theme-teek/theme-chalk/tk-banner-full-img-scale.css";
 import "./tk-index-rainbow.scss";

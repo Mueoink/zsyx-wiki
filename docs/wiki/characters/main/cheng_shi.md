@@ -2,39 +2,17 @@
 ::: details 贡献人员
 
 **此部分由以下人员贡献:**
-<MemberBlock :members="teamMembers" />
+<MemberBlock :filterNames="names" />
 
 <script setup>
 
-const teamMembers = [
-  {
-    avatar: 'https://q1.qlogo.cn/g?b=qq&nk=3265390257&s=640',
-    text: '愚者',
-  },
-    {
-    avatar: 'https://q1.qlogo.cn/g?b=qq&nk=1261815798&s=640',
-    text: '几个孤独',
-  },
-    {
-    avatar: 'https://q1.qlogo.cn/g?b=qq&nk=3593479598&s=640',
-    text: '琥珀',
-  },
-    {
-    avatar: "https://q1.qlogo.cn/g?b=qq&nk=2442544519&s=640",
-    text: "初压",
-  },
-    {
-    avatar: 'https://q1.qlogo.cn/g?b=qq&nk=3835227971&s=640',
-    text: 'Mars',
-  },
-    {
-    avatar: "https://q1.qlogo.cn/g?b=qq&nk=3079265589&s=640",
-    text: "1",
-  },
-  {
-    avatar: 'https://q1.qlogo.cn/g?b=qq&nk=410757752&s=640',
-    text: 'Mueo',
-  },
+const names = [
+'愚者','几个孤独',
+'琥珀',
+"初压",
+'Mars',
+"1",
+'Mueo',
 ];
 
 const galleryImages = [

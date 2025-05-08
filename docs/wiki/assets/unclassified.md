@@ -3,20 +3,12 @@
 ::: details 贡献名单
 
 **此部分由以下人员贡献:**
-<MemberBlock :members="teamMembers" />
+<MemberBlock :filterNames="names" />
 
 <script setup>
 
 
-const teamMembers = [
-          {
-    avatar: 'https://q1.qlogo.cn/g?b=qq&nk=1261815798&s=640',
-    text: '几个孤独',
-  },
- {
-    avatar: 'https://q1.qlogo.cn/g?b=qq&nk=410757752&s=640',
-    text: 'Mueo',
-  },
+const names = ['几个孤独','Mueo',
 ];
 </script>
 

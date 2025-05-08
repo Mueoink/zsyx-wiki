@@ -275,6 +275,24 @@ export default defineConfig({
                     },
                   ],
                 },
+                {
+                  text: "沉沦",
+                  collapsed: true,
+                  items: [
+                    {
+                      text: "污堕",
+                      link: "/wiki/gods/from_the_gods/vice/fouling.md",
+                    },
+                    {
+                      text: "腐朽",
+                      link: "/wiki/gods/from_the_gods/vice/rotten.md",
+                    },
+                    {
+                      text: "湮灭",
+                      link: "/wiki/gods/from_the_gods/vice/annihilate.md",
+                    },
+                  ],
+                },
               ],
             },
             {

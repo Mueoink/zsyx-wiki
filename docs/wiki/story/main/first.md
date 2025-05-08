@@ -6,20 +6,14 @@ outline : 2-3
 ::: details 贡献名单
 
 **此部分由以下人员贡献:**
-<MemberBlock :members="teamMembers" />
+<MemberBlock :filterNames="teamMembers" />
 
 <script setup>
 
 
 const teamMembers = [
-  {
-    avatar: 'https://q1.qlogo.cn/g?b=qq&nk=2496334438&s=640',
-    text: '夹狗',
-  },
-    {
-    avatar: 'https://q1.qlogo.cn/g?b=qq&nk=3593479598&s=640',
-    text: '琥珀',
-  },
+'夹狗',
+'琥珀',
 ];
 </script>
 

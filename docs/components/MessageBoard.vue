@@ -69,7 +69,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, defineProps, PropType, reactive, watch } from 'vue';
+import { ref, computed, defineProps, PropType, reactive } from 'vue';
 
 interface Message {
     text: string;
@@ -102,26 +102,33 @@ const props = defineProps({
 const visibleCount = ref(props.initialCount);
 const expandedStates = reactive<{ [key: number]: boolean }>({});
 
-
-function shuffleArray<T>(array: T[]): T[] {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; 
+const getLevelSortOrder = (level: Message['level']): number => {
+    switch (level) {
+        case '贡献者':
+            return 0;
+        case '支持者':
+            return 1;
+        case '普通':
+        default:
+            return 2;
     }
-    return shuffled;
-}
+};
 
 const processedMessages = computed(() => {
-
     const messagesWithIndex = props.messages.map((message, index) => ({
         ...message,
         originalIndex: index
     }));
 
-    const shuffledMessages = shuffleArray(messagesWithIndex);
+    return messagesWithIndex.sort((a, b) => {
+        const levelOrderA = getLevelSortOrder(a.level);
+        const levelOrderB = getLevelSortOrder(b.level);
 
-    return shuffledMessages;
+        if (levelOrderA !== levelOrderB) {
+            return levelOrderA - levelOrderB;
+        }
+        return a.originalIndex - b.originalIndex;
+    });
 });
 
 
@@ -134,6 +141,7 @@ const showLoadMoreButton = computed(() => {
 });
 
 const loadMore = (event: MouseEvent) => {
+    event.stopPropagation();
     visibleCount.value = Math.min(
         visibleCount.value + props.incrementCount,
         processedMessages.value.length
@@ -170,10 +178,6 @@ const getLevelBadgeClass = (level: Message['level']): string => {
 const shouldShowAvatar = (message: Message): boolean => {
     return message.level !== '普通' && !!message.avatar;
 };
-
-watch(() => props.messages, () => {
-
-}, { deep: true });
 
 </script>
 

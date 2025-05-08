@@ -2,21 +2,13 @@
 ::: details 贡献名单
 
 **此部分由以下人员贡献:**
-<MemberBlock :members="teamMembers" />
+<MemberBlock :filterNames="teamMembers" />
 
 <script setup>
 
-
 const teamMembers = [
-    {
-    avatar: 'https://q1.qlogo.cn/g?b=qq&nk=1261815798&s=640',
-    text: '几个孤独',
-  },
-    {
-    avatar: 'https://q1.qlogo.cn/g?b=qq&nk=2132170581&s=640',
-    text: '翎洛',
-  },
-
+'几个孤独',
+'翎洛',
 ];
 </script>
 

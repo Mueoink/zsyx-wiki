@@ -76,7 +76,7 @@ export const teamMembers = [
   },
   {
     avatar: "https://q1.qlogo.cn/g?b=qq&nk=3969575044&s=640",
-    name: "海棠",
+    name: "未央",
     title: "内容贡献",
   },
   {
@@ -87,6 +87,16 @@ export const teamMembers = [
   {
     avatar: "https://q1.qlogo.cn/g?b=qq&nk=744078196&s=640",
     name: "卿",
+    title: "内容贡献",
+  },
+  {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=2030290549&s=640",
+    name: "莘星",
+    title: "内容贡献",
+  },
+  {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=3586289505&s=640",
+    name: "墓碑",
     title: "内容贡献",
   },
 ];

@@ -1,21 +1,17 @@
 ---
 outline : 2-3
 ---
-# 编写要求 <Badge type="warning" text="beta" />
+# 编写指南 <Badge type="warning" text="beta" />
 ::: details 编写人员
 
 **此部分由以下人员编写:**
-<MemberBlock :members="teamMembers" />
+<MemberBlock :filterNames="names" />
 
 <script setup>
 
-
-const teamMembers = [
-    {
-    avatar: 'https://q1.qlogo.cn/g?b=qq&nk=410757752&s=640',
-    text: 'Mueo',
-  },
+const names = ['Mueo'
 ];
+
 </script>
 
 :::
@@ -204,6 +200,7 @@ id：龙王2B，【欺诈】好骂
 
 ### 7. 神明条目
 
+#### 7.1 真神条目
 **标题格式：** [体系]-[神名]（例：虚无-存在）  
 **内容结构：**  
 **神格**:  描述神明的神格特征，例如：善良、邪恶、中立、混乱等。  
@@ -214,6 +211,9 @@ id：龙王2B，【欺诈】好骂
 **信仰群体**:  描述该神祇的信徒构成、教会组织、主要信仰地区等。  
 **关系**:  描述该神明与其他神明之间的关系，例如：对立、胞神等。  
 **备注**:  可添加相关的梗或说明
+
+#### 7.2 从神条目
+`WIP.`
 
 ---
 

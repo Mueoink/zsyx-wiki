@@ -5,20 +5,12 @@ outline : 2-3
 ::: details 编写人员
 
 **此部分由以下人员编写:**
-<MemberBlock :members="teamMembers" />
+<MemberBlock :filterNames="names" />
 
 <script setup>
 
-
-const teamMembers = [
-  {
-    avatar: 'https://q1.qlogo.cn/g?b=qq&nk=3835227971&s=640',
-    text: 'Mars',
-  },
-  {
-    avatar: 'https://q1.qlogo.cn/g?b=qq&nk=410757752&s=640',
-    text: 'Mueo',
-  },
+const names = [
+'Mars','Mueo',
 ];
 </script>
 

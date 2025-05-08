@@ -3,21 +3,16 @@
 ::: details 贡献名单
 
 **此部分由以下人员贡献:**
-<MemberBlock :members="teamMembers" />
+<MemberBlock :filterNames="teamMembers" />
 
 <script setup>
 
 
 const teamMembers = [
-    {
-    avatar: "https://q1.qlogo.cn/g?b=qq&nk=3969575044&s=640",
-    text: "海棠",
-  },
-  {
-    avatar: "https://q1.qlogo.cn/g?b=qq&nk=2132170581&s=640",
-    text: "翎洛",
-  },
-
+"未央",
+"翎洛",
+"莘星",
+'Mars',
 ];
 </script>
 
@@ -25,9 +20,15 @@ const teamMembers = [
 
 ## 基本信息
 
-**势力类型：** 追求【真理】大型崇神势力（第15章 试炼提前结算了）  
+**势力类型：**   
+追求【真理】大型崇神势力（第15章 试炼提前结算了）
 
-**核心理念：** 追求唯一的真理
+是一个学术与信仰结合的组织，是学者们追求真理、探究宇宙奥秘的地方。
+
+**核心理念：**   
+追求唯一的真理
+
+通过理性的思考和研究，揭示宇宙的真理和神明的本质，学者们相信理性的力量能够洞悉一切。
 
 ## 历史沿革
 
