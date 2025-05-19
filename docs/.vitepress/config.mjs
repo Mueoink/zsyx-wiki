@@ -148,6 +148,10 @@ export default defineConfig({
                   text: "蕈足人",
                   link: "/wiki/setting/race/mushroom-footed.md",
                 },
+                {
+                  text: "虚须吞豚",
+                  link: "/wiki/setting/race/hollow-beard -swallow-the-piglet.md",
+                },
               ],
             },
           ],
@@ -167,6 +171,10 @@ export default defineConfig({
                   text: "生命",
                   collapsed: true,
                   items: [
+                    {
+                      text: "诞育",
+                      link: "/wiki/gods/main/life/procreative.md",
+                    },
                     {
                       text: "繁荣",
                       link: "/wiki/gods/main/life/prosperity.md",
