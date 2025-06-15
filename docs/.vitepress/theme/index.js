@@ -8,7 +8,7 @@ import MemberBlock from "../../components/MemberBlock.vue";
 import Gallery from "../../components/Gallery.vue";
 import Faction from "../../components/Faction.vue";
 import GachaSimulator from "../../components/GachaSimulator.vue";
-import MessageBoard from "../../components/MessageBoard.vue";
+
 
 
 
@@ -34,6 +34,6 @@ export default {
     app.component("Gallery", Gallery);
     app.component("Faction", Faction);
     app.component("GachaSimulator", GachaSimulator);
-    app.component("MessageBoard", MessageBoard);
+
   },
 };

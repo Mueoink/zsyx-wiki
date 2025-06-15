@@ -2,7 +2,7 @@
 ::: details 编写人员
 
 **此部分由以下人员编写:**
-<MemberBlock :filterNames="names" />
+<MemberBlock :filterNames="teamMembers" />
 
 <script setup>
 const teamMembers = [

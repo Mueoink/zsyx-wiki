@@ -1,7 +1,7 @@
 ---
-noTitle: false
-
+autoTitle: false
 ---
+
 <p align="center">
     <a href="/">
         <img width="150" src="../public/logo.png" alt="web logo" />
@@ -50,21 +50,12 @@ noTitle: false
 
 **联系邮箱：[mueo@mueoo.com](mailto:mueo@mueoo.com)**
 
-
-## 留言板
-::: note 提示
- 📬 投稿请联系 **Mars** [chimanlaw@qq.com](chimanlaw@qq.com) ，所有留言均审核后定期更新
-:::
-
-<MessageBoard :messages="messages" />
-
 ## 主要贡献
 
 排名不分先后，感谢各位付出,完整请见 [贡献团队](../contribution/team.md)
 
 <script setup>
 import { VPTeamMembers } from 'vitepress/theme'
-import { messages } from '../js/messages.js'
 const members = [
   {
     avatar: 'https://q1.qlogo.cn/g?b=qq&nk=410757752&s=640',

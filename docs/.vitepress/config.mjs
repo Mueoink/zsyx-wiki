@@ -4,10 +4,13 @@
 import { defineConfig } from "vitepress";
 import { defineTeekConfig } from "vitepress-theme-teek/config";
 
-
 // Teek 主题配置
 const teekConfig = defineTeekConfig({
   teekHome: false,
+  articleUpdate: {
+    enabled: false, // 是否启用文章最近更新栏
+    limit: 3, // 文章最近更新栏显示数量
+  },
 
   vitePlugins: {
     permalinkOption: {
@@ -26,7 +29,7 @@ const teekConfig = defineTeekConfig({
   //   maskBg: "rgba(0, 0, 0, 0.2)", // body 背景图遮罩颜色，如果为数字，则是 rgba(0, 0, 0, ${maskBg})，如果为字符串，则作为背景色。mask 为 true 时生效
   // },
 
-  article: {
+  articleAnalyze: {
     showIcon: false, // 作者、日期、分类、标签、字数、阅读时长、浏览量等文章信息的图标是否显示
     dateFormat: "yyyy-MM-dd hh:mm:ss", // 文章日期格式，首页和文章页解析日期时使用
     showInfo: false, // 是否展示作者、日期、分类、标签、字数、阅读时长、浏览量等文章信息，分别作用于首页和文章页
@@ -102,8 +105,25 @@ export default defineConfig({
       { text: "WIKI", link: "/wiki/start", activeMatch: "/wiki/" },
       {
         text: "贡献",
-        link: "/contribution/contribute",
+        items: [
+          {
+            // 该部分的标题
+            //  text: "Section A Title",
+            items: [
+              { text: "如何贡献", link: "/contribution/contribute" },
+              { text: "编写指南", link: "contribution/compile" },
+              { text: "更新指南", link: "/contribution/updata" },
+              { text: "贡献审核指南", link: "/contribution/guide" },
+              { text: "更新日志", link: "/contribution/logs" },
+            ],
+          },
+        ],
         activeMatch: "/contribution/",
+      },
+      {
+        text: "归档",
+        link: "/function/archives",
+        activeMatch: "/function/archives",
       },
     ],
     editLink: {
@@ -115,11 +135,18 @@ export default defineConfig({
       "/wiki/": [
         {
           text: "开始",
+
           items: [
             { text: "介绍", link: "/wiki/start" },
-            { text: "信仰测试", link: "/wiki/test" },
-            { text: "虚空祈求", link: "/wiki/pray" },
-            { text: "信仰回响", link: "/wiki/divination" },
+            {
+              text: "社区项目",
+              collapsed: true,
+              items: [
+                { text: "信仰测试", link: "/wiki/test" },
+                { text: "虚空祈求", link: "/wiki/pray" },
+                { text: "信仰回响", link: "/wiki/divination" },
+              ],
+            },
           ],
         },
 
@@ -501,7 +528,7 @@ export default defineConfig({
           text: "贡献",
           items: [
             { text: "如何贡献", link: "/contribution/contribute" },
-            { text: "编写要求", link: "/contribution/compile" },
+            { text: "编写指南", link: "/contribution/compile" },
             { text: "更新指南", link: "/contribution/updata" },
             { text: "内容管理流程规范", link: "/contribution/flow" },
             { text: "贡献审核指南", link: "/contribution/guide" },
