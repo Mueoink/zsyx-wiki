@@ -21,9 +21,9 @@
                     <span class="result-title">测试完成！</span>
                 </div>
                 <h2 class="result-faction-title">你更适合作为<span class="faction-name">【{{ topFaction
-                        }}】{{ topFactionBranch }}</span> 的信徒</h2>
+                }}】{{ topFactionBranch }}</span> 的信徒</h2>
                 <p class="result-faction-second">当然，如果你不愿意，也可以试试<span class="faction-name">【{{
-                        secondFaction }}】{{ secondFactionBranch }}</span>
+                    secondFaction }}】{{ secondFactionBranch }}</span>
                 </p>
                 <div class="credibility-section">
                     <h3 class="chart-title">测试结果可信度</h3>
@@ -36,19 +36,40 @@
                     </p>
                     <p class="credibility-explanation" v-else-if="credibilityScore <= 90">已经很准确啦！
                     </p>
-                    <p class="credibility-explanation" v-else-if="credibilityScore >= 91 ">如此完美的答卷！</p>
+                    <p class="credibility-explanation" v-else-if="credibilityScore >= 91">如此完美的答卷！</p>
                 </div>
+
+                <!-- 角色匹配功能区域 -->
+                <div class="character-match-section">
+                    <button v-if="!showCharacterResult" @click="findMatchedCharacter" class="find-match-button">
+                        你更像谁？
+                    </button>
+                    <div v-if="showCharacterResult" class="character-result-card">
+                        <div v-if="matchedCharacter">
+                            <h3 class="character-name">在你身上，我们看到了【{{ matchedCharacter.name }}】的倒影</h3>
+                            <p v-if="matchedCharacter.quote" class="character-quote">“{{ matchedCharacter.quote }}”</p>
+                            <p v-if="matchedCharacter.description" class="character-description">{{
+                                matchedCharacter.description }}</p>
+                            <p class="match-reason">{{ formatMatchReason(matchedCharacter) }}</p>
+                        </div>
+                        <div v-else>
+                            <h3 class="character-name">暂无完全契合的角色</h3>
+                            <p class="character-description">你的灵魂独一无二，尚未在已知的人物中找到完美的回响。敬请期待后续更新！</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="result-description">
                     <p> 测试并非权威,结果仅供参考 </p>
 
                     <div class="charts-container">
                         <div v-if="mainFactionPreferenceData.length > 0" class="bar-chart-wrapper">
-                            <h3 class="chart-title">主信仰偏向</h3>
+                            <h3 class="chart-title">命途偏向</h3>
                             <div class="chart-bars">
                                 <div v-for="(factionData, index) in mainFactionPreferenceData" :key="index"
                                     class="chart-bar-item">
                                     <span class="bar-label">{{ factionData.name }} ({{ factionData.percentage
-                                        }}%)</span>
+                                    }}%)</span>
                                     <div class="bar-container">
                                         <div class="bar"
                                             :class="{ positive: factionData.score >= 0, negative: factionData.score < 0 }"
@@ -59,7 +80,7 @@
                         </div>
 
                         <div v-if="branchFactionPreferenceData.length > 0" class="bar-chart-wrapper">
-                            <h3 class="chart-title">分支信仰偏向</h3>
+                            <h3 class="chart-title">信仰偏向</h3>
                             <div class="chart-bars">
                                 <div v-for="(branchData, index) in branchFactionPreferenceData" :key="index"
                                     class="chart-bar-item">
@@ -89,6 +110,12 @@ export default {
             required: true,
             default: () => [],
         },
+        // 外部传入的角色数据
+        characters: {
+            type: Array,
+            required: true,
+            default: () => [],
+        }
     },
     data() {
         return {
@@ -109,7 +136,7 @@ export default {
                 '文明': ['秩序', '真理', '战争'],
                 '混沌': ['混乱', '痴愚', '沉默'],
                 '存在': ['记忆', '时间'],
-                '虚无': ['欺诈', '命运'],
+                '虚无': ['欺诈','命运'],
             },
             opposingFactions: {
                 '生命': '沉沦',
@@ -144,6 +171,9 @@ export default {
             ],
             mainFactionPreferenceData: [],
             branchFactionPreferenceData: [],
+            // 角色匹配相关状态
+            matchedCharacter: null,
+            showCharacterResult: false,
         };
     },
     computed: {
@@ -304,11 +334,11 @@ export default {
                     }
                 });
             }
-           
+
             if (maxBranchInitialScore <= 0) {
                 this.topFactionBranch = '核心';
             } else {
-                this.topFactionBranch = topBranchName || '核心'; 
+                this.topFactionBranch = topBranchName || '核心';
             }
 
 
@@ -330,8 +360,8 @@ export default {
 
             let secondaryBranchResult = null;
             const filteredBranchesForSecondary = sortedBranchesForSecondary.filter(branch => {
-                if (finalBranchScoresForSecondary[branch] <= 0) return false; 
-              
+                if (finalBranchScoresForSecondary[branch] <= 0) return false;
+
                 let parentFaction = null;
                 for (const fac in this.factionBranches) {
                     if (this.factionBranches[fac].includes(branch)) {
@@ -339,7 +369,7 @@ export default {
                         break;
                     }
                 }
-                if (parentFaction === this.topFaction && branch === this.topFactionBranch) return false; 
+                if (parentFaction === this.topFaction && branch === this.topFactionBranch) return false;
 
                 return true;
             });
@@ -355,11 +385,11 @@ export default {
                     }
                 }
 
-           
+
                 if (topBranchMainFactionForSecondary !== this.topFaction) {
                     secondaryBranchResult = topBranchSecondary;
                 } else if (filteredBranchesForSecondary.length >= 2) {
-                   
+
                     const secondBranchSecondary = filteredBranchesForSecondary[1];
                     let secondBranchMainFaction = null;
                     for (const faction in this.factionBranches) {
@@ -368,22 +398,22 @@ export default {
                             break;
                         }
                     }
-               
+
                     if (secondBranchMainFaction !== this.topFaction) {
                         const topScore = finalBranchScoresForSecondary[topBranchSecondary] || 0;
                         const secondScore = finalBranchScoresForSecondary[secondBranchSecondary] || 0;
                         const coefficient = secondScore === 0 ? Infinity : topScore / secondScore;
-                        if (coefficient < 1.4) { 
+                        if (coefficient < 1.4) {
                             secondaryBranchResult = secondBranchSecondary;
                         } else {
-                            secondaryBranchResult = topBranchSecondary; 
+                            secondaryBranchResult = topBranchSecondary;
                         }
                     } else {
-                       
+
                         secondaryBranchResult = topBranchSecondary;
                     }
                 } else {
-                   
+
                     secondaryBranchResult = topBranchSecondary;
                 }
             }
@@ -473,13 +503,103 @@ export default {
             this.credibilityRating = '完全可信';
             this.mainFactionPreferenceData = [];
             this.branchFactionPreferenceData = [];
+            // 重置角色匹配状态
+            this.matchedCharacter = null;
+            this.showCharacterResult = false;
         },
+
         previousQuestion() {
             if (this.currentQuestionIndex > 0) {
                 this.currentQuestionIndex--;
             }
         },
 
+        // 核心的角色匹配逻辑
+        findMatchedCharacter() {
+            const characterScores = {};
+            const branchPercentages = this.branchFactionPreferenceData.reduce((acc, item) => {
+                acc[item.name] = parseFloat(item.percentage);
+                return acc;
+            }, {});
+            const mainFactionScores = this.mainFactionPreferenceData.reduce((acc, item) => {
+                acc[item.name] = item.score;
+                return acc;
+            }, {});
+
+            this.characters.forEach(character => {
+                let currentScore = 0;
+                character.matchRules.forEach(rule => {
+                    let isMatch = false;
+                    switch (rule.type) {
+                        case 'PRIMARY_FACTION':
+                            if (this.topFaction === rule.faction) isMatch = true;
+                            break;
+                        case 'SECONDARY_FACTION':
+                            if (this.secondFaction === rule.faction) isMatch = true;
+                            break;
+                        case 'BRANCH_PERCENT_RANGE': {
+                            const percent = branchPercentages[rule.branch] || 0;
+                            if (percent >= rule.min && percent <= rule.max) isMatch = true;
+                            break;
+                        }
+                        case 'BRANCH_PERCENT_COMPARE_VALUE': {
+                            const percent = branchPercentages[rule.branch] || 0;
+                            if (rule.comparison === 'GREATER_THAN' && percent > rule.value) isMatch = true;
+                            if (rule.comparison === 'LESS_THAN' && percent < rule.value) isMatch = true;
+                            break;
+                        }
+                        case 'BRANCH_PERCENT_COMPARE_BRANCH': {
+                            const p1 = branchPercentages[rule.branch1] || 0;
+                            const p2 = branchPercentages[rule.branch2] || 0;
+                            if (rule.comparison === 'GREATER_THAN' && p1 > p2) isMatch = true;
+                            if (rule.comparison === 'LESS_THAN' && p1 < p2) isMatch = true;
+                            break;
+                        }
+                        case 'FACTION_SCORE_COMPARE_VALUE': {
+                            const score = mainFactionScores[rule.faction] || 0;
+                            if (rule.comparison === 'GREATER_THAN' && score > rule.value) isMatch = true;
+                            if (rule.comparison === 'LESS_THAN' && score < rule.value) isMatch = true;
+                            break;
+                        }
+                    }
+                    if (isMatch) {
+                        currentScore += rule.points;
+                    }
+                });
+                characterScores[character.name] = currentScore;
+            });
+
+            let bestMatch = null;
+            let maxScore = 0;
+
+            this.characters.forEach(character => {
+                const score = characterScores[character.name];
+                if (score > maxScore) {
+                    const minPoints = character.minTotalPoints || 0;
+                    if (score >= minPoints) {
+                        maxScore = score;
+                        bestMatch = character;
+                    }
+                }
+            });
+
+            this.matchedCharacter = bestMatch;
+            this.showCharacterResult = true;
+        },
+
+        // 格式化匹配原因
+        formatMatchReason(character) {
+            if (!character || !character.matchReasonTemplate) return '';
+
+            const branchPercentages = this.branchFactionPreferenceData.reduce((acc, item) => {
+                acc[item.name] = item.percentage;
+                return acc;
+            }, {});
+
+            return character.matchReasonTemplate.replace(/\{(.+?)\}/g, (match, branchName) => {
+                return branchPercentages[branchName] || '未知';
+            });
+        }
     },
 };
 </script>
@@ -792,5 +912,74 @@ export default {
 
 .rating-perfect {
     background-color: #5cdc5c;
+}
+
+/* 角色匹配区域的样式 */
+.character-match-section {
+    text-align: center;
+    margin-top: 30px;
+    margin-bottom: 15px;
+}
+
+.find-match-button {
+    padding: 15px 30px;
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(45deg, #ef7fac, #a28eeb);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.find-match-button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+.character-result-card {
+    background-color: #fafafa;
+    border: 1px solid #eee;
+    border-radius: 16px;
+    padding: 25px;
+    margin-top: 20px;
+    text-align: left;
+}
+
+.character-name {
+    font-size: 22px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.character-name span {
+    color: #fc5c7d;
+}
+
+.character-quote {
+    font-style: italic;
+    color: #555;
+    margin-bottom: 15px;
+    padding-left: 15px;
+    border-left: 3px solid #ddd;
+}
+
+.character-description {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+.match-reason {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #f0f4f8;
+    border-radius: 8px;
+    color: #4a5568;
+    font-size: 15px;
+    line-height: 1.7;
 }
 </style>

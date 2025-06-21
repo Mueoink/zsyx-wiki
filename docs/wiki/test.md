@@ -8,8 +8,9 @@
 
 <script setup>
 import { questionsData } from '../js/questions.js'
+import { characters } from '../js/character.js'
 </script>
 
-<Faction :questions="questionsData" />
+<Faction :questions="questionsData" :characters = "characters" />
 
 
