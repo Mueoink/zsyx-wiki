@@ -99,4 +99,14 @@ export const teamMembers = [
     name: "墓碑",
     title: "内容贡献",
   },
+  {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=166535570&s=640",
+    name: "惜墨",
+    title: "内容贡献",
+  },
+  {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=2926769260&s=640",
+    name: "衍青",
+    title: "内容贡献",
+  },
 ];
