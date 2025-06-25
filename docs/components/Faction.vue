@@ -1,102 +1,128 @@
 <template>
     <div class="faction-quiz-page">
         <div class="quiz-container">
-            <div v-if="currentQuestionIndex < questions.length" class="question-card">
+            <div v-if="showCommunityPage" class="question-card">
                 <div class="question-header">
-                    <span class="question-number">Question {{ currentQuestionIndex + 1 }}/{{ questions.length }}</span>
+                    <span class="question-number">加入社区</span>
                 </div>
-                <h2 class="question-text">{{ questions[currentQuestionIndex].question }}</h2>
-                <div class="options-grid">
-                    <button v-for="(option, index) in questions[currentQuestionIndex].options" :key="index"
-                        class="option-button" @click="selectOption(option, index)">
-                        {{ option }}
-                    </button>
+                <div class="community-body">
+                    <img :src="communityInfo.avatar" alt="Community Avatar" class="community-avatar">
+                    <div class="community-text-content">
+                        <h2 class="community-title">{{ communityInfo.title }}</h2>
+                        <div class="community-channel-badge">
+                            {{ communityInfo.name }}: {{ communityInfo.description }}
+                        </div>
+                    </div>
                 </div>
-                <div class="navigation-buttons" v-if="currentQuestionIndex > 0">
-                    <button class="previous-button" @click="previousQuestion">上一题</button>
+                <div class="community-actions">
+                    <a :href="communityInfo.joinLink" target="_blank" rel="noopener noreferrer"
+                        class="community-button primary">
+                        点击加入
+                    </a>
+                    <button class="community-button secondary" @click="startQuiz">我已知晓</button>
                 </div>
             </div>
-            <div v-else class="result-card">
-                <div class="result-header">
-                    <span class="result-title">测试完成！</span>
-                </div>
-                <h2 class="result-faction-title">你更适合作为<span class="faction-name">【{{ topFaction
-                }}】{{ topFactionBranch }}</span> 的信徒</h2>
-                <p class="result-faction-second">当然，如果你不愿意，也可以试试<span class="faction-name">【{{
-                    secondFaction }}】{{ secondFactionBranch }}</span>
-                </p>
-                <div class="credibility-section">
-                    <h3 class="chart-title">测试结果可信度</h3>
-                    <div class="credibility-rating" :class="credibilityRatingClass">{{ credibilityRating }} ({{
-                        credibilityScore }}/100)</div>
-                    <p class="credibility-explanation" v-if="credibilityScore < 25">啊哦,看样子你浪费了一段时间。</p>
-                    <p class="credibility-explanation" v-else-if="credibilityScore < 60">准确度不高哦，请遵从本心哦
-                    </p>
-                    <p class="credibility-explanation" v-else-if="credibilityScore < 76">内心可能存在一些矛盾或摇摆哦
-                    </p>
-                    <p class="credibility-explanation" v-else-if="credibilityScore <= 90">已经很准确啦！
-                    </p>
-                    <p class="credibility-explanation" v-else-if="credibilityScore >= 91">如此完美的答卷！</p>
-                </div>
 
-                <!-- 角色匹配功能区域 -->
-                <div class="character-match-section">
-                    <button v-if="!showCharacterResult" @click="findMatchedCharacter" class="find-match-button">
-                        你更像谁？
-                    </button>
-                    <div v-if="showCharacterResult" class="character-result-card">
-                        <div v-if="matchedCharacter">
-                            <h3 class="character-name">在你身上，我们看到了【{{ matchedCharacter.name }}】的倒影</h3>
-                            <p v-if="matchedCharacter.quote" class="character-quote">“{{ matchedCharacter.quote }}”</p>
-                            <p v-if="matchedCharacter.description" class="character-description">{{
-                                matchedCharacter.description }}</p>
-                            <p class="match-reason">{{ formatMatchReason(matchedCharacter) }}</p>
-                        </div>
-                        <div v-else>
-                            <h3 class="character-name">暂无完全契合的角色</h3>
-                            <p class="character-description">你的灵魂独一无二，尚未在已知的人物中找到完美的回响。敬请期待后续更新！</p>
-                        </div>
+            <div v-else>
+                <div v-if="currentQuestionIndex < questions.length" class="question-card">
+                    <div class="question-header">
+                        <span class="question-number">Question {{ currentQuestionIndex + 1 }}/{{ questions.length
+                            }}</span>
+                    </div>
+                    <h2 class="question-text">{{ questions[currentQuestionIndex].question }}</h2>
+                    <div class="options-grid">
+                        <button v-for="(option, index) in questions[currentQuestionIndex].options" :key="index"
+                            class="option-button" @click="selectOption(option, index)">
+                            {{ option }}
+                        </button>
+                    </div>
+                    <div class="navigation-buttons" v-if="currentQuestionIndex > 0">
+                        <button class="previous-button" @click="previousQuestion">上一题</button>
                     </div>
                 </div>
+                <div v-else class="result-card">
+                    <div class="result-header">
+                        <span class="result-title">测试完成！</span>
+                    </div>
+                    <h2 class="result-faction-title">你更适合作为<span class="faction-name">【{{ topFaction
+                            }}】{{ topFactionBranch }}</span> 的信徒</h2>
+                    <p class="result-faction-second">当然，如果你不愿意，也可以试试<span class="faction-name">【{{
+                        secondFaction }}】{{ secondFactionBranch }}</span>
+                    </p>
+                    <div class="credibility-section">
+                        <h3 class="chart-title">测试结果可信度</h3>
+                        <div class="credibility-rating" :class="credibilityRatingClass">{{ credibilityRating }} ({{
+                            credibilityScore }}/100)</div>
+                        <p class="credibility-explanation" v-if="credibilityScore < 25">啊哦,看样子你浪费了一段时间。</p>
+                        <p class="credibility-explanation" v-else-if="credibilityScore < 60">准确度不高哦，请遵从本心哦
+                        </p>
+                        <p class="credibility-explanation" v-else-if="credibilityScore < 76">内心可能存在一些矛盾或摇摆哦
+                        </p>
+                        <p class="credibility-explanation" v-else-if="credibilityScore <= 90">已经很准确啦！
+                        </p>
+                        <p class="credibility-explanation" v-else-if="credibilityScore >= 91">如此完美的答卷！</p>
+                    </div>
 
-                <div class="result-description">
-                    <p> 测试并非权威,结果仅供参考 </p>
+                    <div class="character-match-section">
+                        <button v-if="!showCharacterResult" @click="findMatchedCharacter" class="find-match-button">
+                            你更像谁？
+                        </button>
+                        <div v-if="showCharacterResult" class="character-result-card">
+                            <div v-if="matchedCharacter">
+                                <h3 class="character-name">在你身上，我们看到了【{{ matchedCharacter.name }}】的倒影</h3>
+                                <p v-if="matchedCharacter.quote" class="character-quote">“{{ matchedCharacter.quote
+                                    }}”</p>
+                                <p v-if="matchedCharacter.description" class="character-description">{{
+                                    matchedCharacter.description }}</p>
+                                <p class="match-reason">{{ formatMatchReason(matchedCharacter) }}</p>
+                            </div>
+                            <div v-else>
+                                <h3 class="character-name">暂无完全契合的角色</h3>
+                                <p class="character-description">你的灵魂独一无二，尚未在已知的人物中找到完美的回响。敬请期待后续更新！</p>
+                            </div>
+                        </div>
+                    </div>
 
-                    <div class="charts-container">
-                        <div v-if="mainFactionPreferenceData.length > 0" class="bar-chart-wrapper">
-                            <h3 class="chart-title">命途偏向</h3>
-                            <div class="chart-bars">
-                                <div v-for="(factionData, index) in mainFactionPreferenceData" :key="index"
-                                    class="chart-bar-item">
-                                    <span class="bar-label">{{ factionData.name }} ({{ factionData.percentage
-                                    }}%)</span>
-                                    <div class="bar-container">
-                                        <div class="bar"
-                                            :class="{ positive: factionData.score >= 0, negative: factionData.score < 0 }"
-                                            :style="{ width: factionData.percentageValue + '%' }"></div>
+                    <div class="result-description">
+                        <p> 测试并非权威,结果仅供参考 </p>
+
+                        <div class="charts-container">
+                            <div v-if="mainFactionPreferenceData.length > 0" class="bar-chart-wrapper">
+                                <h3 class="chart-title">命途偏向</h3>
+                                <div class="chart-bars">
+                                    <div v-for="(factionData, index) in mainFactionPreferenceData" :key="index"
+                                        class="chart-bar-item">
+                                        <span class="bar-label">{{ factionData.name }} ({{ factionData.percentage
+                                            }}%)</span>
+                                        <div class="bar-container">
+                                            <div class="bar"
+                                                :class="{ positive: factionData.score >= 0, negative: factionData.score < 0 }"
+                                                :style="{ width: factionData.percentageValue + '%' }"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div v-if="branchFactionPreferenceData.length > 0" class="bar-chart-wrapper">
+                                <h3 class="chart-title">信仰偏向</h3>
+                                <div class="chart-bars">
+                                    <div v-for="(branchData, index) in branchFactionPreferenceData" :key="index"
+                                        class="chart-bar-item">
+                                        <span class="bar-label">{{ branchData.name }} ({{ branchData.percentage
+                                            }}%)</span>
+                                        <div class="bar-container">
+                                            <div class="bar"
+                                                :class="{ positive: branchData.score >= 0, negative: branchData.score < 0 }"
+                                                :style="{ width: branchData.percentageValue + '%' }"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div v-if="branchFactionPreferenceData.length > 0" class="bar-chart-wrapper">
-                            <h3 class="chart-title">信仰偏向</h3>
-                            <div class="chart-bars">
-                                <div v-for="(branchData, index) in branchFactionPreferenceData" :key="index"
-                                    class="chart-bar-item">
-                                    <span class="bar-label">{{ branchData.name }} ({{ branchData.percentage }}%)</span>
-                                    <div class="bar-container">
-                                        <div class="bar"
-                                            :class="{ positive: branchData.score >= 0, negative: branchData.score < 0 }"
-                                            :style="{ width: branchData.percentageValue + '%' }"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
-
+                    <button class="restart-button" @click="restartQuiz">重新测试</button>
                 </div>
-                <button class="restart-button" @click="restartQuiz">重新测试</button>
             </div>
         </div>
     </div>
@@ -110,7 +136,6 @@ export default {
             required: true,
             default: () => [],
         },
-        // 外部传入的角色数据
         characters: {
             type: Array,
             required: true,
@@ -119,6 +144,14 @@ export default {
     },
     data() {
         return {
+            showCommunityPage: true,
+            communityInfo: {
+                title: '欢迎加入WIKI官方社区',
+                avatar: '/avatar.png',
+                name: 'QQ频道',
+                description: 'zsyxwiki233',
+                joinLink: 'https://pd.qq.com/s/7hfn4j2na'
+            },
             currentQuestionIndex: 0,
             factionScores: {},
             initialFactionScores: {},
@@ -136,7 +169,7 @@ export default {
                 '文明': ['秩序', '真理', '战争'],
                 '混沌': ['混乱', '痴愚', '沉默'],
                 '存在': ['记忆', '时间'],
-                '虚无': ['欺诈','命运'],
+                '虚无': ['欺诈', '命运'],
             },
             opposingFactions: {
                 '生命': '沉沦',
@@ -171,7 +204,6 @@ export default {
             ],
             mainFactionPreferenceData: [],
             branchFactionPreferenceData: [],
-            // 角色匹配相关状态
             matchedCharacter: null,
             showCharacterResult: false,
         };
@@ -191,6 +223,9 @@ export default {
         this.initializeFactionScores();
     },
     methods: {
+        startQuiz() {
+            this.showCommunityPage = false;
+        },
         initializeFactionScores() {
             this.initialFactionScores = {};
             this.factionScores = {};
@@ -250,7 +285,7 @@ export default {
                 conflictRatio = numberOfConflicts / totalStrongTags;
             }
 
-            const scalingFactor = 1.6; // 可信度系数，防止过低，越高越低
+            const scalingFactor = 1.6;
             this.credibilityScore = Math.round(100 * Math.max(0, 1 - conflictRatio * scalingFactor));
             this.credibilityRating = this.getCredibilityRating(this.credibilityScore);
         },
@@ -432,7 +467,7 @@ export default {
                 }
                 if (!foundSecondFaction) this.secondFaction = '其他信仰';
             } else {
-                if (sortedMainFactions.length > 1 && sortedMainFactions[1].name !== this.topFaction && sortedMainFactions[1].score > 0) { // Check for positive score
+                if (sortedMainFactions.length > 1 && sortedMainFactions[1].name !== this.topFaction && sortedMainFactions[1].score > 0) {
                     this.secondFaction = sortedMainFactions[1].name;
                     this.secondFactionBranch = '核心';
                 } else if (sortedMainFactions.length > 2 && sortedMainFactions[2].name !== this.topFaction && sortedMainFactions[2].score > 0) {
@@ -503,9 +538,9 @@ export default {
             this.credibilityRating = '完全可信';
             this.mainFactionPreferenceData = [];
             this.branchFactionPreferenceData = [];
-            // 重置角色匹配状态
             this.matchedCharacter = null;
             this.showCharacterResult = false;
+            this.showCommunityPage = true;
         },
 
         previousQuestion() {
@@ -514,7 +549,6 @@ export default {
             }
         },
 
-        // 核心的角色匹配逻辑
         findMatchedCharacter() {
             const characterScores = {};
             const branchPercentages = this.branchFactionPreferenceData.reduce((acc, item) => {
@@ -587,7 +621,6 @@ export default {
             this.showCharacterResult = true;
         },
 
-        // 格式化匹配原因
         formatMatchReason(character) {
             if (!character || !character.matchReasonTemplate) return '';
 
@@ -608,9 +641,10 @@ export default {
 .faction-quiz-page {
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
     min-height: 100vh;
-    padding: 10px;
+    padding: 40px 10px;
+
 }
 
 .quiz-container {
@@ -622,11 +656,12 @@ export default {
 .result-card {
     background-color: #fff;
     border-radius: 24px;
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
     padding: 40px;
     margin-bottom: 30px;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     position: relative;
+    border: 1px solid #e9e9e9;
 }
 
 .question-card::before,
@@ -653,7 +688,8 @@ export default {
 .question-card:hover,
 .result-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.12);
+    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.1);
+    border-color: transparent;
 }
 
 .question-card:hover::before,
@@ -661,29 +697,113 @@ export default {
     opacity: 1;
 }
 
-
 .question-header,
 .result-header {
-    margin-bottom: 25px;
+    margin-bottom: 30px;
     text-align: center;
 }
 
 .question-number,
 .result-title {
-    font-size: 20px;
-    color: #777;
+    font-size: 18px;
+    color: #888;
     letter-spacing: 1px;
     text-transform: uppercase;
     font-weight: 500;
 }
 
-.question-text,
-.result-faction-title {
-    font-size: 20px;
+.community-body {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    margin-bottom: 40px;
+}
+
+.community-avatar {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2.5px solid #e69186;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+}
+
+.community-text-content {
+    text-align: left;
+}
+
+.community-title {
+    font-size: 28px;
     font-weight: 700;
     color: #333;
-    margin-bottom: 20px;
-    line-height: 1.3;
+    margin: 0 0 8px 0;
+}
+
+.community-channel-badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 10px 20px;
+    background-color: #faf2e8;
+    border-radius: 12px;
+    color: #333;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.community-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.community-button {
+    padding: 20px 10px;
+    border-radius: 14px;
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.community-button.primary {
+    background: linear-gradient(45deg, #ef7fac, #a28eeb);
+    color: white;
+    box-shadow: 0 4px 15px rgba(162, 142, 235, 0.4);
+}
+
+.community-button.primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(162, 142, 235, 0.5);
+}
+
+.community-button.secondary {
+    background-color: #f0f2f5;
+    color: #555;
+    border: 2px solid #f0f2f5;
+}
+
+.community-button.secondary:hover {
+    background-color: #e4e6eb;
+    border-color: #e4e6eb;
+    color: #333;
+    transform: translateY(-2px);
+}
+
+.question-text,
+.result-faction-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 30px;
+    line-height: 1.4;
+    text-align: center;
 }
 
 .result-faction-title {
@@ -694,21 +814,15 @@ export default {
 .result-faction-second {
     font-size: 18px;
     color: #555;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
+    text-align: center;
 }
 
 .options-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 30px;
+    gap: 20px;
 }
-
-@media (min-width: 768px) {
-    .options-grid {
-        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    }
-}
-
 
 .option-button,
 .restart-button,
@@ -722,7 +836,7 @@ export default {
     font-weight: 600;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
     cursor: pointer;
-    transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    transition: all 0.2s ease;
     outline: none;
     border: 2px solid #e0e0e0;
 }
@@ -730,7 +844,6 @@ export default {
 .option-button:hover,
 .restart-button:hover,
 .previous-button:hover {
-
     background-color: #e39784;
     color: #fff;
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
@@ -745,7 +858,6 @@ export default {
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
-
 .faction-name {
     font-weight: 700;
     color: #be5f3c;
@@ -753,17 +865,15 @@ export default {
 
 .result-description {
     padding: 0;
-    background-color: transparent;
-    border-radius: 0;
-    border: none;
     color: #777;
     line-height: 1.8;
-    margin-top: 10px;
+    margin-top: 20px;
+    text-align: center;
 }
 
 .result-description p {
     margin-bottom: 15px;
-    font-size: 19px;
+    font-size: 18px;
 }
 
 .restart-button {
@@ -784,37 +894,34 @@ export default {
 }
 
 .navigation-buttons {
-    margin-top: 20px;
+    margin-top: 30px;
     display: flex;
     justify-content: flex-start;
-
 }
 
 .previous-button {
     margin-right: 20px;
 }
 
-
 .charts-container {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    margin-top: 20px;
+    margin-top: 30px;
 }
 
 .bar-chart-wrapper {
-    padding: 15px;
+    padding: 20px;
     border-radius: 12px;
     background-color: #f9f9f9;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-    margin-bottom: 10px;
 }
 
 .chart-title {
     font-size: 16px;
     font-weight: 600;
     color: #555;
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     text-align: center;
     margin-top: 0;
 }
@@ -822,13 +929,13 @@ export default {
 .chart-bars {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
 }
 
 .chart-bar-item {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 6px;
 }
 
 .bar-label {
@@ -839,7 +946,7 @@ export default {
 .bar-container {
     background-color: #e0e0e0;
     border-radius: 8px;
-    height: 15px;
+    height: 16px;
     overflow: hidden;
 }
 
@@ -914,7 +1021,6 @@ export default {
     background-color: #5cdc5c;
 }
 
-/* 角色匹配区域的样式 */
 .character-match-section {
     text-align: center;
     margin-top: 30px;
@@ -978,8 +1084,33 @@ export default {
     padding: 15px;
     background-color: #f0f4f8;
     border-radius: 8px;
-    color: #4a5568;
+    color: #69778f;
     font-size: 15px;
     line-height: 1.7;
+}
+
+@media (max-width: 768px) {
+    .options-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .community-body {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .community-text-content {
+        text-align: center;
+    }
+
+    .community-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (min-width: 768px) {
+    .options-grid {
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    }
 }
 </style>
