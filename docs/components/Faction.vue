@@ -27,7 +27,7 @@
                 <div v-if="currentQuestionIndex < questions.length" class="question-card">
                     <div class="question-header">
                         <span class="question-number">Question {{ currentQuestionIndex + 1 }}/{{ questions.length
-                            }}</span>
+                        }}</span>
                     </div>
                     <h2 class="question-text">{{ questions[currentQuestionIndex].question }}</h2>
                     <div class="options-grid">
@@ -45,10 +45,26 @@
                         <span class="result-title">测试完成！</span>
                     </div>
                     <h2 class="result-faction-title">你更适合作为<span class="faction-name">【{{ topFaction
-                            }}】{{ topFactionBranch }}</span> 的信徒</h2>
+                    }}】{{ topFactionBranch }}</span> 的信徒</h2>
                     <p class="result-faction-second">当然，如果你不愿意，也可以试试<span class="faction-name">【{{
                         secondFaction }}】{{ secondFactionBranch }}</span>
                     </p>
+
+                    <div class="recommended-job-section" v-if="recommendedPrimaryJob">
+                        <h3 class="chart-title">推荐职业</h3>
+                        <div class="job-display-wrapper">
+                            <div class="job-display primary">
+                                <span class="job-label">最适合</span>
+                                <span class="job-name">{{ recommendedPrimaryJob }}</span>
+                            </div>
+                            <div class="job-display secondary" v-if="recommendedSecondaryJob">
+                                <span class="job-label">亦或者</span>
+                                <span class="job-name">{{ recommendedSecondaryJob }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+
                     <div class="credibility-section">
                         <h3 class="chart-title">测试结果可信度</h3>
                         <div class="credibility-rating" :class="credibilityRatingClass">{{ credibilityRating }} ({{
@@ -71,7 +87,7 @@
                             <div v-if="matchedCharacter">
                                 <h3 class="character-name">在你身上，我们看到了【{{ matchedCharacter.name }}】的倒影</h3>
                                 <p v-if="matchedCharacter.quote" class="character-quote">“{{ matchedCharacter.quote
-                                    }}”</p>
+                                }}”</p>
                                 <p v-if="matchedCharacter.description" class="character-description">{{
                                     matchedCharacter.description }}</p>
                                 <p class="match-reason">{{ formatMatchReason(matchedCharacter) }}</p>
@@ -93,7 +109,7 @@
                                     <div v-for="(factionData, index) in mainFactionPreferenceData" :key="index"
                                         class="chart-bar-item">
                                         <span class="bar-label">{{ factionData.name }} ({{ factionData.percentage
-                                            }}%)</span>
+                                        }}%)</span>
                                         <div class="bar-container">
                                             <div class="bar"
                                                 :class="{ positive: factionData.score >= 0, negative: factionData.score < 0 }"
@@ -109,7 +125,7 @@
                                     <div v-for="(branchData, index) in branchFactionPreferenceData" :key="index"
                                         class="chart-bar-item">
                                         <span class="bar-label">{{ branchData.name }} ({{ branchData.percentage
-                                            }}%)</span>
+                                        }}%)</span>
                                         <div class="bar-container">
                                             <div class="bar"
                                                 :class="{ positive: branchData.score >= 0, negative: branchData.score < 0 }"
@@ -129,6 +145,45 @@
 </template>
 
 <script>
+const SCORE_WEIGHTS = {
+    MAIN_FACTION_FROM_SELF: 0.7,
+    MAIN_FACTION_FROM_BRANCH_AVG: 0.5,
+    MAIN_FACTION_PENALTY_FROM_OPPOSING: 0.35,
+    SECONDARY_BRANCH_FROM_SELF: 0.85,
+    SECONDARY_BRANCH_FROM_MAIN_FACTION: 0.3,
+    SECONDARY_BRANCH_PENALTY_FROM_OPPOSING: 0.2,
+    SECONDARY_CHOICE_COEFFICIENT: 1.4,
+    CREDIBILITY_SCALING_FACTOR: 1.6,
+};
+
+const jobsData = {
+    '诞育': { '战士': '酋长', '法师': '生命贤者', '牧师': '子嗣牧师', '刺客': '借诞之婴', '猎人': '创生猎人', '歌者': '' },
+    '繁荣': { '战士': '德鲁伊', '法师': '木精灵', '牧师': '园丁', '刺客': '荆棘之冠', '猎人': '美食家', '歌者': '' },
+    '死亡': { '战士': '', '法师': '死灵法师', '牧师': '守墓人', '刺客': '死亡编织者', '猎人': '猩红猎手', '歌者': '撞钟人' },
+    '污堕': { '战士': '尖啸伯爵', '法师': '欲望主宰', '牧师': '悲悯领主', '刺客': '恶孽', '猎人': '感官追猎者', '歌者': '塞壬' },
+    '腐朽': { '战士': '木乃伊', '法师': '瘟疫枢机', '牧师': '凋零祭司', '刺客': '疮痍之目', '猎人': '黄昏猎人', '歌者': '腐烂颂唱者' },
+    '湮灭': { '战士': '清道夫', '法师': '烬灭者', '牧师': '焚化工', '刺客': '寂灭使徒', '猎人': '终焉行者', '歌者': '毁灭宣告' },
+    '秩序': { '战士': '秩序骑士', '法师': '元素法官', '牧师': '公正官', '刺客': '行刑官', '猎人': '搜查官', '歌者': '律者' },
+    '真理': { '战士': '格斗专家', '法师': '博识学者', '牧师': '外科医生', '刺客': '暗杀博士', '猎人': '陷阱大师', '歌者': '博闻诗人' },
+    '战争': { '战士': '陷阵勇士', '法师': '炼狱主教', '牧师': '督战官', '刺客': '隙光铁刺', '猎人': '鹰眼斥候', '歌者': '风暴之嗓' },
+    '混乱': { '战士': '异血同袍', '法师': '灾祸之源', '牧师': '理智蚀者', '刺客': '折光析影', '猎人': '渔夫', '歌者': '失律琴师' },
+    '痴愚': { '战士': '竖壁骑士', '法师': '幕后戏师', '牧师': '怯愚专家', '刺客': '解构之眼', '猎人': '猎愚人', '歌者': '独奏家' },
+    '沉默': { '战士': '苦行僧', '法师': '默剧大师', '牧师': '守夜人', '刺客': '偃偶师', '猎人': '变色龙', '歌者': '囚徒' },
+    '记忆': { '战士': '镜中人', '法师': '回忆旅者', '牧师': '见证者', '刺客': '旧日追猎者', '猎人': '窥梦游侠', '歌者': '史学家' },
+    '时间': { '战士': '指针骑士', '法师': '时间行者', '牧师': '遗忘医生', '刺客': '另日刺客', '猎人': '驯风游侠', '歌者': '吟游诗人' },
+    '欺诈': { '战士': '杂技演员', '法师': '诡术大师', '牧师': '小丑', '刺客': '受害者', '猎人': '驯兽师', '歌者': '魔术师' },
+    '命运': { '战士': '今日勇士', '法师': '编剧', '牧师': '织命师', '刺客': '窃命之贼', '猎人': '终末之笔', '歌者': '预言家' }
+};
+
+const JOB_TYPE_AFFINITIES = {
+    '战士': ['战争', '秩序', '诞育', '腐朽', '记忆', '时间', '繁荣'],
+    '法师': ['真理', '湮灭', '时间', '混乱', '死亡', '污堕', '痴愚'],
+    '牧师': ['诞育', '繁荣', '死亡', '腐朽', '秩序', '战争', '时间', '欺诈'],
+    '刺客': ['湮灭', '死亡', '欺诈', '沉默', '时间', '真理', '污堕'],
+    '猎人': ['繁荣', '记忆', '沉默', '命运', '欺诈', '战争', '死亡'],
+    '歌者': ['命运', '混乱', '欺诈', '痴愚', '沉默', '腐朽', '污堕']
+};
+
 export default {
     props: {
         questions: {
@@ -206,6 +261,8 @@ export default {
             branchFactionPreferenceData: [],
             matchedCharacter: null,
             showCharacterResult: false,
+            recommendedPrimaryJob: null,
+            recommendedSecondaryJob: null,
         };
     },
     computed: {
@@ -285,8 +342,7 @@ export default {
                 conflictRatio = numberOfConflicts / totalStrongTags;
             }
 
-            const scalingFactor = 1.6;
-            this.credibilityScore = Math.round(100 * Math.max(0, 1 - conflictRatio * scalingFactor));
+            this.credibilityScore = Math.round(100 * Math.max(0, 1 - conflictRatio * SCORE_WEIGHTS.CREDIBILITY_SCALING_FACTOR));
             this.credibilityRating = this.getCredibilityRating(this.credibilityScore);
         },
 
@@ -341,7 +397,7 @@ export default {
                 const mainFactionInitialScore = this.initialFactionScores[factionName] || 0;
                 const opposingMainFactionName = this.opposingFactions[factionName];
                 const opposingMainFactionInitialScore = this.initialFactionScores[opposingMainFactionName] || 0;
-                mainFactionTotalScores[factionName] = (mainFactionInitialScore * 0.7) + (averageBranchScore * 0.5) - (opposingMainFactionInitialScore * 0.35);
+                mainFactionTotalScores[factionName] = (mainFactionInitialScore * SCORE_WEIGHTS.MAIN_FACTION_FROM_SELF) + (averageBranchScore * SCORE_WEIGHTS.MAIN_FACTION_FROM_BRANCH_AVG) - (opposingMainFactionInitialScore * SCORE_WEIGHTS.MAIN_FACTION_PENALTY_FROM_OPPOSING);
             }
 
 
@@ -384,7 +440,7 @@ export default {
                 const opposingFactionInitial = this.initialFactionScores[this.opposingFactions[faction]] || 0;
                 branches.forEach(branch => {
                     const branchInitialScore = this.factionScores[branch] || 0;
-                    finalBranchScoresForSecondary[branch] = (branchInitialScore * 0.85) + (mainFactionInitial * 0.3) - (opposingFactionInitial * 0.2);
+                    finalBranchScoresForSecondary[branch] = (branchInitialScore * SCORE_WEIGHTS.SECONDARY_BRANCH_FROM_SELF) + (mainFactionInitial * SCORE_WEIGHTS.SECONDARY_BRANCH_FROM_MAIN_FACTION) - (opposingFactionInitial * SCORE_WEIGHTS.SECONDARY_BRANCH_PENALTY_FROM_OPPOSING);
                 });
             }
 
@@ -438,7 +494,7 @@ export default {
                         const topScore = finalBranchScoresForSecondary[topBranchSecondary] || 0;
                         const secondScore = finalBranchScoresForSecondary[secondBranchSecondary] || 0;
                         const coefficient = secondScore === 0 ? Infinity : topScore / secondScore;
-                        if (coefficient < 1.4) {
+                        if (coefficient < SCORE_WEIGHTS.SECONDARY_CHOICE_COEFFICIENT) {
                             secondaryBranchResult = secondBranchSecondary;
                         } else {
                             secondaryBranchResult = topBranchSecondary;
@@ -524,6 +580,48 @@ export default {
 
 
             this.calculateCredibility();
+            this.calculateRecommendedJob();
+        },
+
+        calculateRecommendedJob() {
+            const branchesForAffinity = this.branchFactionPreferenceData
+                .filter(branch => branch.score > 0)
+                .filter(branch => branch.name !== this.topFactionBranch && branch.name !== this.secondFactionBranch)
+                .slice(0, 6);
+
+            const affinityScores = branchesForAffinity.reduce((acc, branch) => {
+                acc[branch.name] = branch.score;
+                return acc;
+            }, {});
+
+            const jobTypeScores = {};
+            for (const jobType in JOB_TYPE_AFFINITIES) {
+                jobTypeScores[jobType] = 0;
+                JOB_TYPE_AFFINITIES[jobType].forEach(branch => {
+                    if (affinityScores[branch]) {
+                        jobTypeScores[jobType] += affinityScores[branch];
+                    }
+                });
+            }
+
+            const sortedJobTypes = Object.keys(jobTypeScores).sort((a, b) => jobTypeScores[b] - jobTypeScores[a]);
+            const recommendedJobType = sortedJobTypes.length > 0 ? sortedJobTypes[0] : null;
+
+            if (recommendedJobType) {
+                if (this.topFactionBranch && this.topFactionBranch !== '核心') {
+                    const primaryJobName = jobsData[this.topFactionBranch]?.[recommendedJobType];
+                    if (primaryJobName) {
+                        this.recommendedPrimaryJob = `${recommendedJobType} - ${primaryJobName}`;
+                    }
+                }
+
+                if (this.secondFactionBranch && this.secondFactionBranch !== '其他分支' && this.secondFactionBranch !== '核心' && this.secondFactionBranch !== '无分支') {
+                    const secondaryJobName = jobsData[this.secondFactionBranch]?.[recommendedJobType];
+                    if (secondaryJobName) {
+                        this.recommendedSecondaryJob = `${recommendedJobType} - ${secondaryJobName}`;
+                    }
+                }
+            }
         },
 
         restartQuiz() {
@@ -540,6 +638,8 @@ export default {
             this.branchFactionPreferenceData = [];
             this.matchedCharacter = null;
             this.showCharacterResult = false;
+            this.recommendedPrimaryJob = null;
+            this.recommendedSecondaryJob = null;
             this.showCommunityPage = true;
         },
 
@@ -1088,6 +1188,50 @@ export default {
     font-size: 15px;
     line-height: 1.7;
 }
+
+.recommended-job-section {
+    background-color: #f8f8f8;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+}
+
+.job-display-wrapper {
+    display: flex;
+    justify-content: space-around;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.job-display {
+    text-align: center;
+}
+
+.job-label {
+    display: block;
+    font-size: 14px;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.job-name {
+    font-size: 20px;
+    font-weight: 700;
+    padding: 10px 20px;
+    border-radius: 10px;
+}
+
+.job-display.primary .job-name {
+    background-color: #ffe8d6;
+    color: #be5f3c;
+}
+
+.job-display.secondary .job-name {
+    background-color: #e9ecef;
+    color: #495057;
+}
+
 
 @media (max-width: 768px) {
     .options-grid {

@@ -109,4 +109,14 @@ export const teamMembers = [
     name: "衍青",
     title: "内容贡献",
   },
+  {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=3124935627&s=640",
+    name: "欲念",
+    title: "内容贡献",
+  },
+  {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=3828465930&s=640",
+    name: "祈天星宿",
+    title: "内容贡献",
+  },
 ];
