@@ -162,7 +162,7 @@ export default defineConfig({
               collapsed: true,
               items: [
                 {
-                  text: "希望之州",
+                  text: "希望之洲",
                   link: "/wiki/setting/geography/state_of_hope.md",
                 },
               ],
@@ -178,6 +178,10 @@ export default defineConfig({
                 {
                   text: "虚须吞豚",
                   link: "/wiki/setting/race/hollow-beard -swallow-the-piglet.md",
+                },
+                {
+                  text: "恐魔",
+                  link: "/wiki/setting/race/fear-demon.md",
                 },
               ],
             },
