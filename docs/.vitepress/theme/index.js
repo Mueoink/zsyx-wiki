@@ -1,15 +1,13 @@
 // .vitepress/theme/index.js
 
 //默认主题
-import DefaultTheme from "vitepress/theme";
 
 import "./custom.css";
 import MemberBlock from "../../components/MemberBlock.vue";
 import Gallery from "../../components/Gallery.vue";
 import Faction from "../../components/Faction.vue";
 import GachaSimulator from "../../components/GachaSimulator.vue";
-
-
+import OCCreator from "../../components/OCCreator.vue";
 
 
 // 主题
@@ -34,6 +32,7 @@ export default {
     app.component("Gallery", Gallery);
     app.component("Faction", Faction);
     app.component("GachaSimulator", GachaSimulator);
+    app.component("OCCreator", OCCreator);
 
   },
 };
