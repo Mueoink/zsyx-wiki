@@ -1,7 +1,6 @@
 <!-- .vitepress/components/OCCreator.vue -->
 <script setup>
 import { reactive, computed, watch, ref } from 'vue';
-// 确保这个路径与你的项目结构一致！
 import { professionsData } from '../js/oc-data';
 const props = defineProps({
     itemsData: { type: Array, required: true, default: () => [] }
@@ -13,8 +12,8 @@ const fullbodyPreviewUrl = ref(null);
 const oc = reactive({
     name: 'Mueo',
     displayMode: 'avatar',
-    avatarUrl: 'https://cdn.jsdelivr.net/gh/morax-hhh/files/img/202404172352125.webp',
-    fullbodyUrl: 'https://cdn.jsdelivr.net/gh/morax-hhh/files/img/202404172350431.webp',
+    avatarUrl: 'https://cdn.demo.com/',
+    fullbodyUrl: 'https://cdn.demo.com/',
     avatarFile: null,
     fullbodyFile: null,
     info: { height: '185cm', weight: '70kg', gender: '男', age: 24, birthday: '10月26日', hobby: '探索未知, 收集古物' },
