@@ -127,12 +127,26 @@ const generateImage = async () => {
     if (!previewCard.value || isGenerating.value) return;
     isGenerating.value = true;
 
+    const cloneContainer = document.createElement('div');
+    cloneContainer.style.position = 'absolute';
+    cloneContainer.style.left = '-9999px';
+    cloneContainer.style.top = '0px';
+    cloneContainer.style.zIndex = '-1';
+
+    const clonedCard = previewCard.value.cloneNode(true);
+    clonedCard.style.width = '630px';
+    clonedCard.style.height = 'auto';
+
+    cloneContainer.appendChild(clonedCard);
+    document.body.appendChild(cloneContainer);
+
     try {
-        const canvas = await html2canvas(previewCard.value, {
+        const canvas = await html2canvas(clonedCard, {
             backgroundColor: '#f8f9fa',
             useCORS: true,
             scale: 2,
         });
+
         const dataUrl = canvas.toDataURL('image/png');
         const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
@@ -152,6 +166,7 @@ const generateImage = async () => {
         console.error('生成图片失败:', error);
         alert('生成图片失败，请检查控制台获取更多信息。');
     } finally {
+        document.body.removeChild(cloneContainer);
         isGenerating.value = false;
     }
 };
@@ -303,7 +318,7 @@ const generateImage = async () => {
                             </div>
                             <div class="card-module stats-module">
                                 <div class="stat-item"><span>登神之路</span><strong>{{ oc.keyStats.ascensionPath
-                                }}</strong>
+                                        }}</strong>
                                 </div>
                                 <div class="stat-item"><span>觐见之梯</span><strong>{{ oc.keyStats.stairway }}</strong>
                                 </div>
@@ -321,7 +336,7 @@ const generateImage = async () => {
                                     <div><span class="label">年龄</span><span>{{ oc.info.age }}</span></div>
                                     <div><span class="label">生日</span><span>{{ oc.info.birthday }}</span></div>
                                     <div class="info-hobby"><span class="label">爱好</span><span>{{ oc.info.hobby
-                                    }}</span>
+                                            }}</span>
                                     </div>
                                 </div>
                             </div>
@@ -335,7 +350,7 @@ const generateImage = async () => {
                                 <p class="hobby-text"><strong>爱好:</strong> {{ oc.info.hobby }}</p>
                                 <div class="info-stats-grid">
                                     <div class="info-stat-item">登神之路<strong>{{ oc.keyStats.ascensionPath
-                                    }}</strong></div>
+                                            }}</strong></div>
                                     <div class="info-stat-item">觐见之梯<strong>{{ oc.keyStats.stairway }}</strong></div>
                                     <div class="info-stat-item">全球排名<strong>{{ oc.keyStats.globalRank }}</strong></div>
                                     <div class="info-stat-item">命途排名<strong>{{ oc.keyStats.pathRank }}</strong></div>
