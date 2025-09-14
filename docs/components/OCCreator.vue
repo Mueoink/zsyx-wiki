@@ -1,17 +1,40 @@
 <script setup>
-
 import { reactive, computed, watch, ref } from 'vue';
 import { professionsData } from '../js/oc-data';
+import {
+    levelMap,
+    rarityMap,
+    getRarityClass,
+    getCenteredAttributeBarStyle,
+    getBarEndCapClass
+} from '../js/ocUtils.js';
 import html2canvas from 'html2canvas';
 
 const props = defineProps({
     itemsData: { type: Array, required: true, default: () => [] }
 });
 
+const showCommunityPage = ref(true);
+
+const communityInfo = reactive({
+    title: '欢迎加入WIKI官方社区',
+    avatar: '/avatar.png',
+    name: 'QQ频道',
+    description: 'zsyxwiki233',
+    joinLink: 'https://pd.qq.com/s/7hfn4j2na'
+});
+
+function enterCreator() {
+    showCommunityPage.value = false;
+}
+
 const avatarPreviewUrl = ref(null);
 const fullbodyPreviewUrl = ref(null);
 const previewCard = ref(null);
 const isGenerating = ref(false);
+const generatedImageUrl = ref(null);
+const showImagePreviewModal = ref(false);
+
 
 const oc = reactive({
     name: 'Mueo',
@@ -29,71 +52,102 @@ const oc = reactive({
 const faiths = Object.keys(professionsData);
 const availableProfessions = computed(() => professionsData[oc.keyStats.faith]?.filter(p => p.name) || []);
 watch(() => oc.keyStats.faith, () => { oc.keyStats.profession = availableProfessions.value[0]?.name || ''; });
+
 const handleFileChange = (event, type) => {
     const file = event.target.files[0]; if (!file) return;
     const previewUrlRef = type === 'avatar' ? avatarPreviewUrl : fullbodyPreviewUrl;
     if (previewUrlRef.value) URL.revokeObjectURL(previewUrlRef.value);
     oc[`${type}File`] = file; previewUrlRef.value = URL.createObjectURL(file);
 };
+
 const clearFile = (type) => {
     oc[`${type}File`] = null; const previewUrlRef = type === 'avatar' ? avatarPreviewUrl : fullbodyPreviewUrl;
     if (previewUrlRef.value) URL.revokeObjectURL(previewUrlRef.value);
     previewUrlRef.value = null;
 };
+
+const onImageError = (event) => {
+    event.target.src = '/avatar.png';
+};
+
 const displayAvatarSrc = computed(() => avatarPreviewUrl.value || oc.avatarUrl);
 const displayFullbodySrc = computed(() => fullbodyPreviewUrl.value || oc.fullbodyUrl);
-const levelMap = { 1: 'D', 2: 'C', 3: 'B', 4: 'A', 5: 'S', 6: 'SS', 7: 'SSS', 8: 'SP' };
-const rarityMap = Object.fromEntries(Object.entries(levelMap).map(([k, v]) => [v, parseInt(k)]));
+
 const selectedPredefinedItem = reactive({ name: '' });
 const customItem = reactive({ name: '', rarity: 'C', description: '', quantity: 1 });
+
 const groupedItemsData = computed(() => {
     return props.itemsData.reduce((acc, item) => {
         const group = item.card || '未分类'; if (!acc[group]) acc[group] = []; acc[group].push(item); return acc;
     }, {});
 });
+
 function addItemToBackpack() {
+    let itemToAdd = null;
+    let quantityToAdd = 1;
+
     if (selectedPredefinedItem.name) {
-        const existingItem = oc.backpack.find(i => i.name === selectedPredefinedItem.name);
-        if (existingItem) { existingItem.quantity += 1; } else {
-            const item = props.itemsData.find(i => i.name === selectedPredefinedItem.name);
-            if (item) oc.backpack.push({ id: Date.now(), ...item, rarity: levelMap[item.level], level: item.level, quantity: 1 });
+        const item = props.itemsData.find(i => i.name === selectedPredefinedItem.name);
+        if (item) {
+            itemToAdd = {
+                name: item.name,
+                rarity: levelMap[item.level],
+                description: item.description || item.text,
+                level: item.level
+            };
         }
         selectedPredefinedItem.name = '';
     } else if (customItem.name.trim()) {
-        oc.backpack.push({ id: Date.now(), ...customItem, level: rarityMap[customItem.rarity] });
+        itemToAdd = {
+            name: customItem.name.trim(),
+            rarity: customItem.rarity,
+            description: customItem.description,
+            level: rarityMap[customItem.rarity]
+        };
+        quantityToAdd = customItem.quantity;
         Object.assign(customItem, { name: '', rarity: 'C', description: '', quantity: 1 });
     }
+
+    if (itemToAdd) {
+        const existingItem = oc.backpack.find(i => i.name === itemToAdd.name);
+        if (existingItem) {
+            existingItem.quantity += quantityToAdd;
+        } else {
+            oc.backpack.push({ id: Date.now(), ...itemToAdd, quantity: quantityToAdd });
+        }
+    }
 }
+
 const isAddButtonDisabled = computed(() => !selectedPredefinedItem.name && !customItem.name.trim());
 function removeItem(itemId) { oc.backpack = oc.backpack.filter(item => item.id !== itemId); }
-const getRarityClass = (rarityLabel) => `level-${rarityMap[rarityLabel] || 0}`;
-const getCenteredAttributeBarStyle = (value, max = 10) => {
-    const safeValue = Math.max(-max, Math.min(max, value));
-    const percentage = (Math.abs(safeValue) / max) * 50;
-    const style = { width: `${percentage}%` }; if (safeValue >= 0) style.left = '50%'; else style.right = '50%';
-    return style;
-};
-const getBarEndCapClass = (value) => {
-    if (value === 0) return '';
-    return value > 0 ? 'end-cap-right' : 'end-cap-left';
-};
+
 const topTwoItems = computed(() => [...oc.backpack].sort((a, b) => b.level - a.level).slice(0, 2));
 
 const generateImage = async () => {
     if (!previewCard.value || isGenerating.value) return;
     isGenerating.value = true;
+
     try {
         const canvas = await html2canvas(previewCard.value, {
             backgroundColor: '#f8f9fa',
             useCORS: true,
             scale: 2,
         });
-        const link = document.createElement('a');
-        link.href = canvas.toDataURL('image/png');
-        link.download = `${oc.name}_OC_Card.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const dataUrl = canvas.toDataURL('image/png');
+        const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
+        if (isMobile) {
+            generatedImageUrl.value = dataUrl;
+            showImagePreviewModal.value = true;
+        } else {
+            const link = document.createElement('a');
+            link.href = dataUrl;
+            link.download = `${oc.name}_OC_Card.png`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
     } catch (error) {
         console.error('生成图片失败:', error);
         alert('生成图片失败，请检查控制台获取更多信息。');
@@ -101,235 +155,434 @@ const generateImage = async () => {
         isGenerating.value = false;
     }
 };
+
 </script>
 
 <template>
+    <div v-if="showImagePreviewModal" class="image-preview-modal" @click="showImagePreviewModal = false">
+        <div class="modal-content" @click.stop>
+            <img :src="generatedImageUrl" alt="生成的OC卡片" />
+            <p>长按图片或右键即可保存</p>
+            <button @click="showImagePreviewModal = false">关闭</button>
+        </div>
+    </div>
+
     <div class="oc-creator-container">
 
-        <div class="oc-form-panel gradient-border-active">
-            <div class="form-header"><span class="form-title">OC生成器</span></div>
-            <fieldset>
-                <legend>外观与身份</legend>
-                <div class="form-grid-2">
-                    <div><label>名字:</label><input v-model="oc.name" type="text"></div>
-                    <div><label>显示模式:</label><select v-model="oc.displayMode">
-                            <option value="avatar">头像</option>
-                            <option value="fullbody">立绘</option>
-                        </select></div>
-                </div>
-                <div class="image-input-group"><input v-model="oc.avatarUrl" type="text" placeholder="输入头像图片链接"
-                        v-if="oc.displayMode === 'avatar'"><input v-model="oc.fullbodyUrl" type="text"
-                        placeholder="输入立绘图片链接" v-if="oc.displayMode === 'fullbody'"><label
-                        class="file-upload-button">上传文件<input type="file"
-                            @change="handleFileChange($event, oc.displayMode)" accept="image/*"></label><button
-                        v-if="oc[`${oc.displayMode}File`]" @click="clearFile(oc.displayMode)"
-                        class="clear-btn">清除文件</button></div>
-                <small class="form-note">提示：优先显示上传的文件。</small>
-            </fieldset>
-            <fieldset>
-                <legend>基础信息</legend>
-                <div class="form-grid-responsive"><label>身高:<input v-model="oc.info.height"></label><label>体重:<input
-                            v-model="oc.info.weight"></label><label>性别:<input
-                            v-model="oc.info.gender"></label><label>年龄:<input v-model.number="oc.info.age"
-                            type="number"></label><label>生日:<input v-model="oc.info.birthday"></label></div>
-                <label>兴趣爱好:<input v-model="oc.info.hobby"></label>
-            </fieldset>
-            <fieldset>
-                <legend>信仰与职业</legend>
-                <div class="form-grid-2"><label>信仰:<select v-model="oc.keyStats.faith">
-                            <option v-for="faith in faiths" :key="faith" :value="faith">{{ faith }}</option>
-                        </select></label><label>职业:<select v-model="oc.keyStats.profession"
-                            :disabled="!oc.keyStats.faith">
-                            <option value="" disabled>--选择职业--</option>
-                            <option v-for="prof in availableProfessions" :key="prof.name" :value="prof.name">{{
-                                prof.type }}: {{ prof.name }}</option>
-                        </select></label></div>
-            </fieldset>
-            <fieldset>
-                <legend>关键数值</legend>
-                <div class="form-grid-responsive"><label>登神之路:<input v-model.number="oc.keyStats.ascensionPath"
-                            type="number"></label><label>觐见之梯:<input v-model.number="oc.keyStats.stairway"
-                            type="number"></label><label>全球排名:<input v-model.number="oc.keyStats.globalRank"
-                            type="number"></label><label>命途排名:<input v-model.number="oc.keyStats.pathRank"
-                            type="number"></label></div>
-            </fieldset>
-            <fieldset>
-                <legend>属性面板</legend>
-                <div class="form-grid-2">
-                    <div class="attribute-slider"><label>虔诚: {{ oc.attributes.piety }}
-                            <small>(-1至1)</small></label><input v-model.number="oc.attributes.piety" type="range"
-                            min="-1" max="1" step="0.1"></div>
-                    <div class="attribute-slider"><label>道德: {{ oc.attributes.morality }}
-                            <small>(-1至1)</small></label><input v-model.number="oc.attributes.morality" type="range"
-                            min="-1" max="1" step="0.1"></div>
-                </div>
-                <div class="form-grid-responsive"><label>智力 <small>(-10至10)</small>:<input
-                            v-model.number="oc.attributes.intelligence" type="number" step="0.1" min="-10"
-                            max="10"></label><label>体质 <small>(-10至10)</small>:<input
-                            v-model.number="oc.attributes.constitution" type="number" step="0.1" min="-10"
-                            max="10"></label><label>魅力 <small>(-10至10)</small>:<input
-                            v-model.number="oc.attributes.charisma" type="number" step="0.1" min="-10"
-                            max="10"></label><label>理智 <small>(-10至10)</small>:<input
-                            v-model.number="oc.attributes.sanity" type="number" step="0.1" min="-10"
-                            max="10"></label><label>战力 <small>(-10至10)</small>:<input
-                            v-model.number="oc.attributes.combatPower" type="number" step="0.1" min="-10"
-                            max="10"></label></div>
-            </fieldset>
-            <fieldset>
-                <legend>背包管理</legend>
-                <div class="backpack-adder-grid">
-                    <div class="adder-section">
-                        <h4>从列表添加</h4><select v-model="selectedPredefinedItem.name">
-                            <option value="" disabled>选择天赋或道具...</option>
-                            <optgroup v-for="(items, groupName) in groupedItemsData" :key="groupName"
-                                :label="groupName">
-                                <option v-for="item in items" :key="item.name" :value="item.name">{{
-                                    levelMap[item.level] }} - {{ item.name }}</option>
-                            </optgroup>
-                        </select>
-                    </div>
-                    <div class="adder-section">
-                        <h4>或自定义添加</h4><input v-model="customItem.name" placeholder="物品名称" type="text">
-                        <div class="custom-item-row"><select v-model="customItem.rarity">
-                                <option v-for="r in Object.values(levelMap)" :key="r" :value="r">{{ r }}</option>
-                            </select><input v-model.number="customItem.quantity" type="number" min="1" placeholder="数量">
-                        </div><textarea v-model="customItem.description" placeholder="物品描述..."></textarea>
+        <div v-if="showCommunityPage" class="community-ad-card">
+            <div class="question-header">
+                <span class="question-number">加入社区</span>
+            </div>
+            <div class="community-body">
+                <img :src="communityInfo.avatar" alt="Community Avatar" class="community-avatar">
+                <div class="community-text-content">
+                    <h2 class="community-title">{{ communityInfo.title }}</h2>
+                    <div class="community-channel-badge">
+                        {{ communityInfo.name }}: {{ communityInfo.description }}
                     </div>
                 </div>
-                <button @click="addItemToBackpack" class="add-button" :disabled="isAddButtonDisabled">添加到背包</button>
-            </fieldset>
-            <div class="generate-button-container"><button @click="generateImage" class="generate-button"
-                    :disabled="isGenerating">{{ isGenerating ? '生成中...' : '生成OC卡片' }}</button></div>
+            </div>
+            <div class="community-actions">
+                <a :href="communityInfo.joinLink" target="_blank" rel="noopener noreferrer"
+                    class="community-button primary">
+                    点击加入
+                </a>
+                <button class="community-button secondary" @click="enterCreator">我已知晓</button>
+            </div>
         </div>
 
-        <div class="oc-profile-preview-wrapper gradient-border-active">
-            <div class="oc-profile-preview" ref="previewCard">
-                <div :class="oc.displayMode === 'avatar' ? 'profile-grid-avatar' : 'profile-grid-fullbody'">
-                    <template v-if="oc.displayMode === 'avatar'">
-                        <div class="card-module header-module"><img :src="displayAvatarSrc" alt="头像" class="avatar">
-                            <div class="name-section">
-                                <h1>{{ oc.name }}</h1>
-                                <div class="tags"><span class="tag faith">{{ oc.keyStats.faith }}</span><span
-                                        class="tag profession">{{ oc.keyStats.profession }}</span></div>
-                            </div>
+        <template v-else>
+            <div class="oc-form-panel gradient-border-active">
+                <div class="form-header"><span class="form-title">OC生成器</span></div>
+                <fieldset>
+                    <legend>外观与身份</legend>
+                    <div class="form-grid-2">
+                        <div><label>名字:</label><input v-model="oc.name" type="text"></div>
+                        <div><label>显示模式:</label><select v-model="oc.displayMode">
+                                <option value="avatar">头像</option>
+                                <option value="fullbody">立绘</option>
+                            </select></div>
+                    </div>
+                    <div class="image-input-group"><input v-model="oc.avatarUrl" type="text" placeholder="输入头像图片链接"
+                            v-if="oc.displayMode === 'avatar'"><input v-model="oc.fullbodyUrl" type="text"
+                            placeholder="输入立绘图片链接" v-if="oc.displayMode === 'fullbody'"><label
+                            class="file-upload-button">上传文件<input type="file"
+                                @change="handleFileChange($event, oc.displayMode)" accept="image/*"></label><button
+                            v-if="oc[`${oc.displayMode}File`]" @click="clearFile(oc.displayMode)"
+                            class="clear-btn">清除文件</button></div>
+                    <small class="form-note">提示：优先显示上传的文件。</small>
+                </fieldset>
+                <fieldset>
+                    <legend>基础信息</legend>
+                    <div class="form-grid-responsive"><label>身高:<input v-model="oc.info.height"></label><label>体重:<input
+                                v-model="oc.info.weight"></label><label>性别:<input
+                                v-model="oc.info.gender"></label><label>年龄:<input v-model.number="oc.info.age"
+                                type="number"></label><label>生日:<input v-model="oc.info.birthday"></label></div>
+                    <label>兴趣爱好:<input v-model="oc.info.hobby"></label>
+                </fieldset>
+                <fieldset>
+                    <legend>信仰与职业</legend>
+                    <div class="form-grid-2"><label>信仰:<select v-model="oc.keyStats.faith">
+                                <option v-for="faith in faiths" :key="faith" :value="faith">{{ faith }}</option>
+                            </select></label><label>职业:<select v-model="oc.keyStats.profession"
+                                :disabled="!oc.keyStats.faith">
+                                <option value="" disabled>--选择职业--</option>
+                                <option v-for="prof in availableProfessions" :key="prof.name" :value="prof.name">{{
+                                    prof.type }}: {{ prof.name }}</option>
+                            </select></label></div>
+                </fieldset>
+                <fieldset>
+                    <legend>关键数值</legend>
+                    <div class="form-grid-responsive"><label>登神之路:<input v-model.number="oc.keyStats.ascensionPath"
+                                type="number"></label><label>觐见之梯:<input v-model.number="oc.keyStats.stairway"
+                                type="number"></label><label>全球排名:<input v-model.number="oc.keyStats.globalRank"
+                                type="number"></label><label>命途排名:<input v-model.number="oc.keyStats.pathRank"
+                                type="number"></label></div>
+                </fieldset>
+                <fieldset>
+                    <legend>属性面板</legend>
+                    <div class="form-grid-2">
+                        <div class="attribute-slider"><label>虔诚: {{ oc.attributes.piety }}
+                                <small>(-1至1)</small></label><input v-model.number="oc.attributes.piety" type="range"
+                                min="-1" max="1" step="0.1"></div>
+                        <div class="attribute-slider"><label>道德: {{ oc.attributes.morality }}
+                                <small>(-1至1)</small></label><input v-model.number="oc.attributes.morality" type="range"
+                                min="-1" max="1" step="0.1"></div>
+                    </div>
+                    <div class="form-grid-responsive"><label>智力 <small>(-10至10)</small>:<input
+                                v-model.number="oc.attributes.intelligence" type="number" step="0.1" min="-10"
+                                max="10"></label><label>体质 <small>(-10至10)</small>:<input
+                                v-model.number="oc.attributes.constitution" type="number" step="0.1" min="-10"
+                                max="10"></label><label>魅力 <small>(-10至10)</small>:<input
+                                v-model.number="oc.attributes.charisma" type="number" step="0.1" min="-10"
+                                max="10"></label><label>理智 <small>(-10至10)</small>:<input
+                                v-model.number="oc.attributes.sanity" type="number" step="0.1" min="-10"
+                                max="10"></label><label>战力 <small>(-10至10)</small>:<input
+                                v-model.number="oc.attributes.combatPower" type="number" step="0.1" min="-10"
+                                max="10"></label></div>
+                </fieldset>
+                <fieldset>
+                    <legend>背包管理</legend>
+                    <div class="backpack-adder-grid">
+                        <div class="adder-section">
+                            <h4>从列表添加</h4><select v-model="selectedPredefinedItem.name">
+                                <option value="" disabled>选择天赋或道具...</option>
+                                <optgroup v-for="(items, groupName) in groupedItemsData" :key="groupName"
+                                    :label="groupName">
+                                    <option v-for="item in items" :key="item.name" :value="item.name">{{
+                                        levelMap[item.level] }} - {{ item.name }}</option>
+                                </optgroup>
+                            </select>
                         </div>
-                        <div class="card-module stats-module">
-                            <div class="stat-item"><span>登神之路</span><strong>{{ oc.keyStats.ascensionPath }}</strong>
-                            </div>
-                            <div class="stat-item"><span>觐见之梯</span><strong>{{ oc.keyStats.stairway }}</strong></div>
-                            <div class="stat-item"><span>全球排名</span><strong>{{ oc.keyStats.globalRank }}</strong></div>
-                            <div class="stat-item"><span>命途排名</span><strong>{{ oc.keyStats.pathRank }}</strong></div>
+                        <div class="adder-section">
+                            <h4>或自定义添加</h4><input v-model="customItem.name" placeholder="物品名称" type="text">
+                            <div class="custom-item-row"><select v-model="customItem.rarity">
+                                    <option v-for="r in Object.values(levelMap)" :key="r" :value="r">{{ r }}</option>
+                                </select><input v-model.number="customItem.quantity" type="number" min="1"
+                                    placeholder="数量">
+                            </div><textarea v-model="customItem.description" placeholder="物品描述..."></textarea>
                         </div>
-                        <div class="card-module info-module-avatar">
-                            <h4>基础信息</h4>
-                            <div class="info-list">
-                                <div><span class="label">身高</span><span>{{ oc.info.height }}</span></div>
-                                <div><span class="label">体重</span><span>{{ oc.info.weight }}</span></div>
-                                <div><span class="label">性别</span><span>{{ oc.info.gender }}</span></div>
-                                <div><span class="label">年龄</span><span>{{ oc.info.age }}</span></div>
-                                <div><span class="label">生日</span><span>{{ oc.info.birthday }}</span></div>
-                                <div class="info-hobby"><span class="label">爱好</span><span>{{ oc.info.hobby }}</span>
+                    </div>
+                    <button @click="addItemToBackpack" class="add-button" :disabled="isAddButtonDisabled">添加到背包</button>
+                </fieldset>
+                <div class="generate-button-container"><button @click="generateImage" class="generate-button"
+                        :disabled="isGenerating">{{ isGenerating ? '生成中...' : '生成OC卡片' }}</button></div>
+            </div>
+
+            <div class="oc-profile-preview-wrapper gradient-border-active">
+                <div class="oc-profile-preview" ref="previewCard">
+                    <div :class="oc.displayMode === 'avatar' ? 'profile-grid-avatar' : 'profile-grid-fullbody'">
+                        <template v-if="oc.displayMode === 'avatar'">
+                            <div class="card-module header-module"><img :src="displayAvatarSrc" @error="onImageError"
+                                    alt="头像" class="avatar">
+                                <div class="name-section">
+                                    <h1>{{ oc.name }}</h1>
+                                    <div class="tags"><span class="tag faith">{{ oc.keyStats.faith }}</span><span
+                                            class="tag profession">{{ oc.keyStats.profession }}</span></div>
                                 </div>
                             </div>
-                        </div>
-                    </template>
-                    <template v-else>
-                        <div class="card-module image-module"><img :src="displayFullbodySrc" alt="立绘"
-                                class="fullbody-image"></div>
-                        <div class="card-module info-module">
-                            <h1>{{ oc.name }}</h1>
-                            <p class="profession-text">{{ oc.keyStats.faith }} · {{ oc.keyStats.profession }}</p>
-                            <p class="hobby-text"><strong>爱好:</strong> {{ oc.info.hobby }}</p>
-                            <div class="info-stats-grid">
-                                <div class="info-stat-item">登神之路<strong>{{ oc.keyStats.ascensionPath }}</strong></div>
-                                <div class="info-stat-item">觐见之梯<strong>{{ oc.keyStats.stairway }}</strong></div>
-                                <div class="info-stat-item">全球排名<strong>{{ oc.keyStats.globalRank }}</strong></div>
-                                <div class="info-stat-item">命途排名<strong>{{ oc.keyStats.pathRank }}</strong></div>
+                            <div class="card-module stats-module">
+                                <div class="stat-item"><span>登神之路</span><strong>{{ oc.keyStats.ascensionPath
+                                }}</strong>
+                                </div>
+                                <div class="stat-item"><span>觐见之梯</span><strong>{{ oc.keyStats.stairway }}</strong>
+                                </div>
+                                <div class="stat-item"><span>全球排名</span><strong>{{ oc.keyStats.globalRank }}</strong>
+                                </div>
+                                <div class="stat-item"><span>命途排名</span><strong>{{ oc.keyStats.pathRank }}</strong>
+                                </div>
                             </div>
-                        </div>
-                    </template>
-                </div>
-                <div class="shared-modules">
-                    <div class="card-module attributes-module-full">
-                        <h4>属性面板</h4>
-                        <div class="attributes-list">
-                            <div class="attribute-item"><span class="label">虔诚</span>
-                                <div class="progress-bar-container centered">
-                                    <div class="progress-bar-inner p-piety"
-                                        :style="getCenteredAttributeBarStyle(oc.attributes.piety, 1)"
-                                        :class="getBarEndCapClass(oc.attributes.piety)"></div>
-                                </div><span>{{ oc.attributes.piety }}</span>
+                            <div class="card-module info-module-avatar">
+                                <h4>基础信息</h4>
+                                <div class="info-list">
+                                    <div><span class="label">身高</span><span>{{ oc.info.height }}</span></div>
+                                    <div><span class="label">体重</span><span>{{ oc.info.weight }}</span></div>
+                                    <div><span class="label">性别</span><span>{{ oc.info.gender }}</span></div>
+                                    <div><span class="label">年龄</span><span>{{ oc.info.age }}</span></div>
+                                    <div><span class="label">生日</span><span>{{ oc.info.birthday }}</span></div>
+                                    <div class="info-hobby"><span class="label">爱好</span><span>{{ oc.info.hobby
+                                    }}</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="attribute-item"><span class="label">道德</span>
-                                <div class="progress-bar-container centered">
-                                    <div class="progress-bar-inner p-morality"
-                                        :style="getCenteredAttributeBarStyle(oc.attributes.morality, 1)"
-                                        :class="getBarEndCapClass(oc.attributes.morality)"></div>
-                                </div><span>{{ oc.attributes.morality }}</span>
+                        </template>
+                        <template v-else>
+                            <div class="card-module image-module"><img :src="displayFullbodySrc" @error="onImageError"
+                                    alt="立绘" class="fullbody-image"></div>
+                            <div class="card-module info-module">
+                                <h1>{{ oc.name }}</h1>
+                                <p class="profession-text">{{ oc.keyStats.faith }} · {{ oc.keyStats.profession }}</p>
+                                <p class="hobby-text"><strong>爱好:</strong> {{ oc.info.hobby }}</p>
+                                <div class="info-stats-grid">
+                                    <div class="info-stat-item">登神之路<strong>{{ oc.keyStats.ascensionPath
+                                    }}</strong></div>
+                                    <div class="info-stat-item">觐见之梯<strong>{{ oc.keyStats.stairway }}</strong></div>
+                                    <div class="info-stat-item">全球排名<strong>{{ oc.keyStats.globalRank }}</strong></div>
+                                    <div class="info-stat-item">命途排名<strong>{{ oc.keyStats.pathRank }}</strong></div>
+                                </div>
                             </div>
-                            <div class="attribute-item"><span class="label">智力</span>
-                                <div class="progress-bar-container centered">
-                                    <div class="progress-bar-inner p-intel"
-                                        :style="getCenteredAttributeBarStyle(oc.attributes.intelligence, 10)"
-                                        :class="getBarEndCapClass(oc.attributes.intelligence)"></div>
-                                </div><span>{{ oc.attributes.intelligence }}</span>
-                            </div>
-                            <div class="attribute-item"><span class="label">体质</span>
-                                <div class="progress-bar-container centered">
-                                    <div class="progress-bar-inner p-const"
-                                        :style="getCenteredAttributeBarStyle(oc.attributes.constitution, 10)"
-                                        :class="getBarEndCapClass(oc.attributes.constitution)"></div>
-                                </div><span>{{ oc.attributes.constitution }}</span>
-                            </div>
-                            <div class="attribute-item"><span class="label">魅力</span>
-                                <div class="progress-bar-container centered">
-                                    <div class="progress-bar-inner p-charisma"
-                                        :style="getCenteredAttributeBarStyle(oc.attributes.charisma, 10)"
-                                        :class="getBarEndCapClass(oc.attributes.charisma)"></div>
-                                </div><span>{{ oc.attributes.charisma }}</span>
-                            </div>
-                            <div class="attribute-item"><span class="label">理智</span>
-                                <div class="progress-bar-container centered">
-                                    <div class="progress-bar-inner p-sanity"
-                                        :style="getCenteredAttributeBarStyle(oc.attributes.sanity, 10)"
-                                        :class="getBarEndCapClass(oc.attributes.sanity)"></div>
-                                </div><span>{{ oc.attributes.sanity }}</span>
-                            </div>
-                            <div class="attribute-item"><span class="label">战力</span>
-                                <div class="progress-bar-container centered">
-                                    <div class="progress-bar-inner p-combat"
-                                        :style="getCenteredAttributeBarStyle(oc.attributes.combatPower, 10)"
-                                        :class="getBarEndCapClass(oc.attributes.combatPower)"></div>
-                                </div><span>{{ oc.attributes.combatPower }}</span>
-                            </div>
-                        </div>
-                        <p class="attribute-note">注：虔诚与道德以0为中立点，其余属性以0为略弱于普通人水平。</p>
+                        </template>
                     </div>
-                    <div class="card-module items-module-full">
-                        <h4>核心装备 / 背包</h4>
-                        <div class="featured-items-grid" v-if="topTwoItems.length > 0">
-                            <div v-for="item in topTwoItems" :key="item.id" class="featured-item-card">
-                                <div class="featured-item-header"><span class="rarity-tag"
-                                        :class="`tag-${getRarityClass(item.rarity)}`">{{ item.rarity }}</span><span
-                                        class="featured-item-name">{{ item.name }}</span></div>
-                                <p class="featured-item-desc">{{ item.description || item.text }}</p>
+                    <div class="shared-modules">
+                        <div class="card-module attributes-module-full">
+                            <h4>属性面板</h4>
+                            <div class="attributes-list">
+                                <div class="attribute-item"><span class="label">虔诚</span>
+                                    <div class="progress-bar-container centered">
+                                        <div class="progress-bar-inner p-piety"
+                                            :style="getCenteredAttributeBarStyle(oc.attributes.piety, 1)"
+                                            :class="getBarEndCapClass(oc.attributes.piety)"></div>
+                                    </div><span>{{ oc.attributes.piety }}</span>
+                                </div>
+                                <div class="attribute-item"><span class="label">道德</span>
+                                    <div class="progress-bar-container centered">
+                                        <div class="progress-bar-inner p-morality"
+                                            :style="getCenteredAttributeBarStyle(oc.attributes.morality, 1)"
+                                            :class="getBarEndCapClass(oc.attributes.morality)"></div>
+                                    </div><span>{{ oc.attributes.morality }}</span>
+                                </div>
+                                <div class="attribute-item"><span class="label">智力</span>
+                                    <div class="progress-bar-container centered">
+                                        <div class="progress-bar-inner p-intel"
+                                            :style="getCenteredAttributeBarStyle(oc.attributes.intelligence, 10)"
+                                            :class="getBarEndCapClass(oc.attributes.intelligence)"></div>
+                                    </div><span>{{ oc.attributes.intelligence }}</span>
+                                </div>
+                                <div class="attribute-item"><span class="label">体质</span>
+                                    <div class="progress-bar-container centered">
+                                        <div class="progress-bar-inner p-const"
+                                            :style="getCenteredAttributeBarStyle(oc.attributes.constitution, 10)"
+                                            :class="getBarEndCapClass(oc.attributes.constitution)"></div>
+                                    </div><span>{{ oc.attributes.constitution }}</span>
+                                </div>
+                                <div class="attribute-item"><span class="label">魅力</span>
+                                    <div class="progress-bar-container centered">
+                                        <div class="progress-bar-inner p-charisma"
+                                            :style="getCenteredAttributeBarStyle(oc.attributes.charisma, 10)"
+                                            :class="getBarEndCapClass(oc.attributes.charisma)"></div>
+                                    </div><span>{{ oc.attributes.charisma }}</span>
+                                </div>
+                                <div class="attribute-item"><span class="label">理智</span>
+                                    <div class="progress-bar-container centered">
+                                        <div class="progress-bar-inner p-sanity"
+                                            :style="getCenteredAttributeBarStyle(oc.attributes.sanity, 10)"
+                                            :class="getBarEndCapClass(oc.attributes.sanity)"></div>
+                                    </div><span>{{ oc.attributes.sanity }}</span>
+                                </div>
+                                <div class="attribute-item"><span class="label">战力</span>
+                                    <div class="progress-bar-container centered">
+                                        <div class="progress-bar-inner p-combat"
+                                            :style="getCenteredAttributeBarStyle(oc.attributes.combatPower, 10)"
+                                            :class="getBarEndCapClass(oc.attributes.combatPower)"></div>
+                                    </div><span>{{ oc.attributes.combatPower }}</span>
+                                </div>
                             </div>
+                            <p class="attribute-note">注：虔诚与道德以0为中立点，其余属性以0为略弱于普通人水平。</p>
                         </div>
-                        <div class="items-container">
-                            <div v-for="item in oc.backpack" :key="item.id" class="item-badge"
-                                @click="removeItem(item.id)" title="点击移除"><span class="rarity-tag"
-                                    :class="`tag-${getRarityClass(item.rarity)}`">{{ item.rarity
-                                    }}</span><span class="item-name">{{ item.name }} x{{ item.quantity }}</span></div>
-                            <p v-if="!oc.backpack.length" class="empty-backpack">背包是空的...</p>
+                        <div class="card-module items-module-full">
+                            <h4>核心装备 / 背包</h4>
+                            <div class="featured-items-grid" v-if="topTwoItems.length > 0">
+                                <div v-for="item in topTwoItems" :key="item.id" class="featured-item-card">
+                                    <div class="featured-item-header"><span class="rarity-tag"
+                                            :class="`tag-${getRarityClass(item.rarity)}`">{{ item.rarity }}</span><span
+                                            class="featured-item-name">{{ item.name }}</span></div>
+                                    <p class="featured-item-desc">{{ item.description || item.text }}</p>
+                                </div>
+                            </div>
+                            <div class="items-container">
+                                <div v-for="item in oc.backpack" :key="item.id" class="item-badge"
+                                    @click="removeItem(item.id)" title="点击移除"><span class="rarity-tag"
+                                        :class="`tag-${getRarityClass(item.rarity)}`">{{ item.rarity
+                                        }}</span><span class="item-name">{{ item.name }} x{{ item.quantity }}</span>
+                                </div>
+                                <p v-if="!oc.backpack.length" class="empty-backpack">背包是空的...</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </template>
     </div>
 </template>
 
 <style scoped>
+.image-preview-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    padding: 1rem;
+    box-sizing: border-box;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    text-align: center;
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.modal-content img {
+    max-width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    border-radius: 8px;
+}
+
+.modal-content p {
+    margin: 0;
+    color: #333;
+    font-weight: 500;
+}
+
+.modal-content button {
+    padding: 10px 20px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.community-ad-card {
+    background-color: #fff;
+    border-radius: 24px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+    padding: 40px;
+    border: 1px solid #e9e9e9;
+    width: 100%;
+    max-width: 800px;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+.question-header {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.question-number {
+    font-size: 18px;
+    color: #888;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+.community-body {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    margin-bottom: 40px;
+}
+
+.community-avatar {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2.5px solid #e69186;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+}
+
+.community-text-content {
+    text-align: left;
+}
+
+.community-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 8px 0;
+}
+
+.community-channel-badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 10px 20px;
+    background-color: #faf2e8;
+    border-radius: 12px;
+    color: #333;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.community-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.community-button {
+    padding: 20px 10px;
+    border-radius: 14px;
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.community-button.primary {
+    background: linear-gradient(45deg, #ef7fac, #a28eeb);
+    color: white;
+    box-shadow: 0 4px 15px rgba(162, 142, 235, 0.4);
+}
+
+.community-button.primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(162, 142, 235, 0.5);
+}
+
+.community-button.secondary {
+    background-color: #f0f2f5;
+    color: #555;
+    border: 2px solid #f0f2f5;
+}
+
+.community-button.secondary:hover {
+    background-color: #e4e6eb;
+    border-color: #e4e6eb;
+    color: #333;
+    transform: translateY(-2px);
+}
 
 .oc-creator-container {
     display: flex;
@@ -1059,7 +1312,6 @@ input[type="range"]::-moz-range-thumb {
     animation: gradient-flow 3s linear infinite;
 }
 
-/* 移动端*/
 @media (max-width: 960px) {
 
     .profile-grid-avatar,
@@ -1096,6 +1348,23 @@ input[type="range"]::-moz-range-thumb {
 }
 
 @media (max-width: 768px) {
+    .community-body {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .community-text-content {
+        text-align: center;
+    }
+
+    .community-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .community-ad-card {
+        padding: 20px;
+    }
+
     .oc-form-panel {
         padding: 15px;
     }

@@ -1,7 +1,30 @@
 <template>
     <div class="gacha-simulator-page">
-        <div class="gacha-container">
-            <!-- 抽卡控制区域 -->
+        <div v-if="showCommunityPage" class="gacha-container">
+            <div class="question-card">
+                <div class="question-header">
+                    <span class="question-number">加入社区</span>
+                </div>
+                <div class="community-body">
+                    <img :src="communityInfo.avatar" alt="Community Avatar" class="community-avatar">
+                    <div class="community-text-content">
+                        <h2 class="community-title">{{ communityInfo.title }}</h2>
+                        <div class="community-channel-badge">
+                            {{ communityInfo.name }}: {{ communityInfo.description }}
+                        </div>
+                    </div>
+                </div>
+                <div class="community-actions">
+                    <a :href="communityInfo.joinLink" target="_blank" rel="noopener noreferrer"
+                        class="community-button primary">
+                        点击加入
+                    </a>
+                    <button class="community-button secondary" @click="enterSimulator">我已知晓</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-else class="gacha-container">
             <div class="draw-controls">
                 <button class="draw-button" @click="performSingleDraw" :disabled="isDrawing">
                     <span v-if="!isDrawing">进行祈求 (x1)</span>
@@ -17,21 +40,17 @@
                 </button>
             </div>
 
-            <!-- 抽卡次数显示 -->
             <div class="draw-counter">
                 已祈求 {{ drawCount }} 次 (距下次SS+保底 {{ pityThresholdSSPlus - pityCounterSSPlus }} 次)
             </div>
 
-            <!-- 卡片展示区域 -->
             <div class="card-display-area">
                 <transition name="card-reveal" mode="out-in">
-                    <!-- 加载状态 -->
                     <div v-if="isDrawing" key="loading" class="loading-overlay">
                         <div class="spinner"></div>
                         <p>正在沟通虚空...</p>
                         <p v-if="currentDrawType === 5" class="multi-draw-notice">(五连祈求进行中)</p>
                     </div>
-                    <!-- 抽到的卡片 (单抽或五连最高) -->
                     <div v-else-if="drawnCard" :key="drawnCard.uniqueId" class="card-display-wrapper">
                         <div class="result-card" :class="getCardLevelClass(drawnCard.level)">
                             <div class="card-shine"></div>
@@ -47,14 +66,12 @@
                             </div>
                         </div>
                     </div>
-                    <!-- 初始占位卡片 -->
                     <div v-else key="placeholder" class="placeholder-card">
                         <p>点击按钮开始祈求<br />获取你的天赋或道具</p>
                     </div>
                 </transition>
             </div>
 
-            <!-- 五连抽结果提示 -->
             <div v-if="multiDrawHighestLevel > 0 && !isDrawing && currentDrawType === 5" class="multi-draw-summary">
                 本次五连祈求最高获得
                 <span class="card-level-tag history-tag" :class="['tag-' + getCardLevelClass(multiDrawHighestLevel)]">
@@ -63,11 +80,8 @@
                 级别物品!<p> (已展示最高稀有度卡片，其余结果见历史记录)</p>
             </div>
 
-            <!-- 抽卡历史记录区域 -->
             <div v-if="drawHistory.length > 0" class="draw-history-area">
                 <h3 class="history-title">祈求记录</h3>
-
-                <!-- 低等级卡片统计 -->
                 <div class="low-level-summary">
                     <h4>低稀有度统计:</h4>
                     <span v-for="level in [1, 2, 3]" :key="'summary-' + level" class="low-level-item">
@@ -78,7 +92,6 @@
                     </span>
                 </div>
 
-                <!-- 高等级卡片列表 -->
                 <div class="high-level-list">
                     <h4>高稀有度获得列表 (A级及以上):</h4>
                     <ul v-if="highLevelHistoryItems.length > 0">
@@ -94,7 +107,6 @@
                     <p v-else class="no-high-level">尚未获得 A 级或以上物品</p>
                 </div>
             </div>
-
         </div>
     </div>
 </template>
@@ -111,6 +123,14 @@ export default {
     },
     data() {
         return {
+            showCommunityPage: true,
+            communityInfo: {
+                title: '欢迎加入WIKI官方社区',
+                avatar: '/avatar.png',
+                name: 'QQ频道',
+                description: 'zsyxwiki233',
+                joinLink: 'https://pd.qq.com/s/7hfn4j2na'
+            },
             isDrawing: false,
             drawnCard: null,
             drawCount: 0,
@@ -118,19 +138,13 @@ export default {
             uniqueCounter: 0,
             currentDrawType: 1,
             multiDrawHighestLevel: 0,
-            // 单抽
             probabilitiesSingle: { 1: 37.4, 2: 32, 3: 16.2, 4: 9.0, 5: 3.54, 6: 1.42, 7: 0.43, 8: 0.01 },
-            // 五连基础
             probabilitiesMulti: { 1: 44.595, 2: 30, 3: 15, 4: 6, 5: 3, 6: 1.2, 7: 0.2, 8: 0.005 },
-            // 五连保底
             probabilitiesGuaranteedBPlus: { 3: 75.995, 4: 20.6, 5: 2, 6: 1.2, 7: 0.2, 8: 0.005 },
             levelMap: { 0: '?', 1: 'D', 2: 'C', 3: 'B', 4: 'A', 5: 'S', 6: 'SS', 7: 'SSS', 8: 'SP' },
-            // 追踪SS+保底计数
-            pityCounterSSPlus: 0, 
-            // SS+保底阈值
-            pityThresholdSSPlus: 500, 
-            // SS+保底概率
-            probabilitiesPitySSPlus: { 6: 95, 7: 4.99, 8: 0.01 } 
+            pityCounterSSPlus: 0,
+            pityThresholdSSPlus: 500,
+            probabilitiesPitySSPlus: { 6: 95, 7: 4.99, 8: 0.01 }
         };
     },
     computed: {
@@ -148,6 +162,9 @@ export default {
         }
     },
     methods: {
+        enterSimulator() {
+            this.showCommunityPage = false;
+        },
         performSingleDraw() {
             if (this.isDrawing || !this.validateCardData()) return;
             this.isDrawing = true;
@@ -161,22 +178,18 @@ export default {
                 const currentDrawNumber = startingDrawCount + 1;
                 let triggeredSSPlusPity = false;
 
-            
-                this.pityCounterSSPlus++; 
+                this.pityCounterSSPlus++;
 
-                // 检查SS+保底
                 if (this.pityCounterSSPlus >= this.pityThresholdSSPlus) {
-                    drawnLevel = this.determinePitySSPlusLevel(); 
-                    triggeredSSPlusPity = true; 
-                    this.pityCounterSSPlus = 0; // 重置计数器
+                    drawnLevel = this.determinePitySSPlusLevel();
+                    triggeredSSPlusPity = true;
+                    this.pityCounterSSPlus = 0;
                 } else {
-                    drawnLevel = this.determineLevelFromProbabilities(this.probabilitiesSingle); // 正常概率
-                    // 如果没触发保底，但抽到了SS+，也要重置计数器
+                    drawnLevel = this.determineLevelFromProbabilities(this.probabilitiesSingle);
                     if (drawnLevel >= 6) {
                         this.pityCounterSSPlus = 0;
                     }
                 }
-            
 
                 cardToDisplay = this.findCardByLevel(drawnLevel, currentDrawNumber);
 
@@ -197,7 +210,7 @@ export default {
             const results = [];
             let maxLevelInBatch = 0;
             let hasGuaranteedItem = false;
-            let ssPlusPityJustTriggeredInBatch = false; // 确保一个五连只触发一次硬保底
+            let ssPlusPityJustTriggeredInBatch = false;
 
             for (let i = 0; i < count; i++) {
                 const currentDrawNumber = startingDrawCount + i + 1;
@@ -205,23 +218,19 @@ export default {
                 let drawnCard;
                 let triggeredSSPlusPityThisDraw = false;
 
-                // SS+ 多抽保底
-                this.pityCounterSSPlus++; // 计数增加
+                this.pityCounterSSPlus++;
 
-                
                 if (!ssPlusPityJustTriggeredInBatch && this.pityCounterSSPlus >= this.pityThresholdSSPlus) {
-                    drawnLevel = this.determinePitySSPlusLevel(); 
+                    drawnLevel = this.determinePitySSPlusLevel();
                     triggeredSSPlusPityThisDraw = true;
-                    ssPlusPityJustTriggeredInBatch = true; 
-                    this.pityCounterSSPlus = 0; 
+                    ssPlusPityJustTriggeredInBatch = true;
+                    this.pityCounterSSPlus = 0;
                 } else {
-                    drawnLevel = this.determineLevelFromProbabilities(this.probabilitiesMulti); 
-                    
+                    drawnLevel = this.determineLevelFromProbabilities(this.probabilitiesMulti);
                     if (drawnLevel >= 6) {
                         this.pityCounterSSPlus = 0;
                     }
                 }
-            
 
                 drawnCard = this.findCardByLevel(drawnLevel, currentDrawNumber);
                 results.push(drawnCard);
@@ -234,14 +243,12 @@ export default {
                 }
             }
 
-            
             if (!hasGuaranteedItem && !ssPlusPityJustTriggeredInBatch) {
                 const replaceIndex = Math.floor(Math.random() * count);
                 const guaranteedLevel = this.determineLevelFromProbabilities(this.probabilitiesGuaranteedBPlus);
                 const originalDrawNumber = results[replaceIndex].drawNumber;
                 const guaranteedCard = this.findCardByLevel(guaranteedLevel, originalDrawNumber);
 
-                // 替换的卡原本是SS+，需要重新调整保底计数器 
                 if (results[replaceIndex].level >= 6 && guaranteedCard.level < 6) {
                     console.warn("B+保底替换掉了一个SS+卡片，SS+计数器可能未按预期恢复（此情况概率极低）。");
                 }
@@ -297,11 +304,10 @@ export default {
             return fallbackLevel !== undefined ? fallbackLevel : 1;
         },
 
-        // SS+保底等级
         determinePitySSPlusLevel() {
             const random = Math.random() * 100;
             let cumulativeProbability = 0;
-            const pityLevels = [6, 7, 8]; // 按SS, SSS, SP顺序检查
+            const pityLevels = [6, 7, 8];
             for (const level of pityLevels) {
                 const prob = this.probabilitiesPitySSPlus[level];
                 cumulativeProbability += prob;
@@ -309,9 +315,8 @@ export default {
                     return level;
                 }
             }
-            // 回退
             console.warn("SS+保底概率计算回退");
-            return 6; // 默认返回SS
+            return 6;
         },
 
         findCardByLevel(level, drawNumber) {
@@ -363,7 +368,6 @@ export default {
 </script>
 
 <style>
-/* Global styles (body, etc.) - Keep as is */
 body {
     margin: 0;
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -373,7 +377,113 @@ body {
 </style>
 
 <style scoped>
-/* All scoped styles from the original code - Keep as is */
+.question-card {
+    background-color: #fff;
+    border-radius: 24px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+    padding: 40px;
+    border: 1px solid #e9e9e9;
+    max-width: 500px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.question-header {
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.question-number {
+    font-size: 18px;
+    color: #888;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+.community-body {
+    display: flex;
+    align-items: center;
+    gap: 40px;
+    margin-bottom: 40px;
+}
+
+.community-avatar {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2.5px solid #e69186;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+}
+
+.community-text-content {
+    text-align: left;
+}
+
+.community-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #333;
+    margin: 0 0 8px 0;
+}
+
+.community-channel-badge {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 10px 20px;
+    background-color: #faf2e8;
+    border-radius: 12px;
+    color: #333;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.community-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.community-button {
+    padding: 20px 10px;
+    border-radius: 14px;
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.community-button.primary {
+    background: linear-gradient(45deg, #ef7fac, #a28eeb);
+    color: white;
+    box-shadow: 0 4px 15px rgba(162, 142, 235, 0.4);
+}
+
+.community-button.primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(162, 142, 235, 0.5);
+}
+
+.community-button.secondary {
+    background-color: #f0f2f5;
+    color: #555;
+    border: 2px solid #f0f2f5;
+}
+
+.community-button.secondary:hover {
+    background-color: #e4e6eb;
+    border-color: #e4e6eb;
+    color: #333;
+    transform: translateY(-2px);
+}
 
 .draw-controls {
     display: flex;
@@ -400,24 +510,19 @@ body {
     background-color: #3a86e0;
 }
 
-/* 五连抽加载提示 */
 .multi-draw-notice {
     font-size: 14px;
     color: #868e96;
     margin-top: 8px;
 }
 
-/* 五连抽结果 */
 .multi-draw-summary {
     width: 100%;
     max-width: 480px;
-    /* 与历史记录区域同宽 */
     margin-top: -10px;
-    /* 稍微向上移动，靠近卡片 */
     margin-bottom: 20px;
     padding: 12px 18px;
     background-color: #e9ecef;
-    /* 淡灰色背景 */
     border-radius: 10px;
     text-align: center;
     font-size: 14px;
@@ -441,8 +546,6 @@ body {
     position: relative;
 
 }
-
-
 
 @keyframes gradient-flow {
     0% {
@@ -506,12 +609,10 @@ body {
 }
 
 .draw-button {
-    /*padding: 18px 40px;*/
     border: none;
     border-radius: 16px;
     background-color: #f09819;
     color: #fff;
-    /*font-size: 20px;*/
     font-weight: 600;
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
     cursor: pointer;
@@ -997,5 +1098,24 @@ body {
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
     background-size: 300% 100%;
     animation: gradient-flow var(--gradient-speed, 2.5s) linear infinite;
+}
+
+@media (max-width: 768px) {
+    .community-body {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .community-text-content {
+        text-align: center;
+    }
+
+    .community-actions {
+        grid-template-columns: 1fr;
+    }
+
+    .question-card {
+        padding: 20px;
+    }
 }
 </style>
