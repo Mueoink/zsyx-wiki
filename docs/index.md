@@ -4,8 +4,8 @@ layout: home
 
 hero:
   name: "诸神愚戏 WIKI"
-  text: "基于《诸神愚戏》小说搭建的WIKI网站"
-  tagline: 基于《诸神愚戏》小说搭建的WIKI网站
+  text: 神谕与谎言的档案馆
+  tagline: ✨基于《诸神愚戏》小说搭建的WIKI网站
   image:
     src: /logo.png
     alt: VitePress
@@ -16,3 +16,6 @@ hero:
     - theme: alt
       text: 编写指南
       link: /contribution/compile
+
+---
+<Home />

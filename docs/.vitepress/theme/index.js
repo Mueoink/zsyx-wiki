@@ -13,14 +13,17 @@ import OCCreator from "../../components/OCCreator.vue";
 // 主题
 import Teek from "vitepress-theme-teek";
 import "vitepress-theme-teek/index.css";
+import "@theojs/lumen/home";
+import { Underline } from "@theojs/lumen";
 
 
 // 新样式
 import "vitepress-theme-teek/theme-chalk/tk-mark.css";  
-import "vitepress-theme-teek/theme-chalk/tk-sidebar.css"; 
+// import "vitepress-theme-teek/theme-chalk/tk-sidebar.css"; 
 import "vitepress-theme-teek/theme-chalk/tk-code-block-mobile.css"; 
 import "vitepress-theme-teek/theme-chalk/tk-banner-desc-gradient.css";
 import "vitepress-theme-teek/theme-chalk/tk-banner-full-img-scale.css";
+// import "vitepress-theme-teek/theme-chalk/tk-doc-h1-gradient.css";
 import "./tk-index-rainbow.scss";
 
 /** @type {import('vitepress').Theme} */
@@ -33,6 +36,7 @@ export default {
     app.component("Faction", Faction);
     app.component("GachaSimulator", GachaSimulator);
     app.component("OCCreator", OCCreator);
+    app.component("Home", Underline);
 
   },
 };

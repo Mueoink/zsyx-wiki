@@ -24,7 +24,7 @@ autoTitle: false
 
 ## 欢迎来到《诸神愚戏》WIKI！
 
-这里是致力于收录和整理小说《诸神愚戏》相关内容的百科全书。
+这里是致力于收录和整理小说《诸神愚戏》相关内容的档案馆。
 
 无论是小说中的人物、事件、地点，还是神话设定、世界观细节，
 
@@ -52,7 +52,7 @@ autoTitle: false
 
 ## 主要贡献
 
-排名不分先后，感谢各位付出,完整请见 [贡献团队](../contribution/team.md)
+排名不分先后，感谢各位付出，完整请见 [贡献团队](../contribution/team.md)
 
 <script setup>
 import { VPTeamMembers } from 'vitepress/theme'

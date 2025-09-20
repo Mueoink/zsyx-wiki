@@ -71,6 +71,13 @@ const teekConfig = defineTeekConfig({
       createYear: 2024, // 创建年份
       suffix: "诸神愚戏 WIKI", // 后缀
     },
+
+    // sidebarOption: {
+    //   sort: false, // 开启 frontmatter.sidebarSort 功能，默认已经开启，无需设置
+    //   defaultSortNum: 9999, // 没有指定 frontmatter.sidebarSort 时的默认值，用于侧边栏排序
+    //   sortNumFromFileName: false, // 是否用文件名的前缀序号作为其侧边栏 Item 的排序序号。如果为 true，当文件名存在序号前缀，则使用序号前缀，否则使用 defaultSortNum
+    // },
+
     // ICP 备案信息配置
     // icpRecord: {
     //   name: "桂ICP备2021009994号",
@@ -84,6 +91,8 @@ const teekConfig = defineTeekConfig({
     // },
   },
 });
+
+
 // VitePress 配置
 export default defineConfig({
   extends: teekConfig,
@@ -535,7 +544,7 @@ export default defineConfig({
             { text: "如何贡献", link: "/contribution/contribute" },
             { text: "编写指南", link: "/contribution/compile" },
             { text: "更新指南", link: "/contribution/updata" },
-            { text: "内容管理流程规范", link: "/contribution/flow" },
+            // { text: "内容管理流程规范", link: "/contribution/flow" },
             { text: "贡献审核指南", link: "/contribution/guide" },
             { text: "贡献团队", link: "/contribution/team" },
           ],
