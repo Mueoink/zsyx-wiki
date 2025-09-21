@@ -28,7 +28,7 @@ export const characters = [
         name: "程实",
         quote: "我从不骗人,也从不相信任何人说的话,包括我自己",
         description: "一位在诸神游戏中挣扎求生的天生骗子，虚无的宠儿，内心深处却保留着一丝善良与柔软。",
-        minTotalPoints: 60, // 保留但大幅降低最低分，体现相对严格
+        minTotalPoints: 60, 
         matchRules: [
             { type: 'PRIMARY_FACTION', faction: '虚无', points: 30 },
             { type: 'SECONDARY_FACTION', faction: '混沌', points: 10 },

@@ -119,4 +119,29 @@ export const teamMembers = [
     name: "祈天星宿",
     title: "内容贡献",
   },
+  {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=1619305803&s=640",
+    name: "Ginking",
+    title: "内容贡献",
+  },
+  {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=3830467355&s=640",
+    name: "厌夙",
+    title: "内容贡献",
+  },
+  {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=3873260433&s=640",
+    name: "记号笔",
+    title: "内容贡献",
+  },
+  {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=3775056706&s=640",
+    name: "此情可待",
+    title: "内容贡献",
+  },
+  {
+    avatar: "https://q1.qlogo.cn/g?b=qq&nk=2096819137&s=640",
+    name: "星河",
+    title: "内容贡献",
+  },
 ];
